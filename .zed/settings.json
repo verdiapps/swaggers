@@ -1,0 +1,20 @@
+// Folder-specific settings
+//
+// For a full list of overridable settings, and general information on folder-specific settings,
+// see the documentation: https://zed.dev/docs/configuring-zed#settings-files
+{
+  "lsp": {
+    "json-language-server": {
+      "settings": {
+        "json": {
+          "schemas": [
+            {
+              "fileMatch": ["mobile-authorization.json"],
+              "url": "https://spec.openapis.org/oas/3.0/schema/2024-10-18",
+            },
+          ],
+        },
+      },
+    },
+  },
+}

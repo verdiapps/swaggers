@@ -1,0 +1,1491 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Mobile Authorization Service",
+    "version": "2.0.0",
+    "description": "API for mobile and web application authorization, user management, and blockchain wallet operations"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Health check endpoint",
+        "description": "Check the health status of the service and database connectivity",
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCheckResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service is degraded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCheckDegradedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Login with username/email and password",
+        "description": "Authenticate using username or email with password credentials",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordLoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful login",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokensResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Register a new user",
+        "description": "Create a new user account with username, email, and password. Automatically generates a blockchain wallet for the user.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful registration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokensResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "User already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/": {
+      "get": {
+        "tags": ["User"],
+        "summary": "Get current authenticated user details",
+        "description": "Returns the authenticated user's profile information",
+        "security": [
+          {
+            "cookieAuth": [],
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "User not exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/initial": {
+      "get": {
+        "tags": ["User"],
+        "summary": "Get initial user details",
+        "description": "Returns the initial authenticated user's profile information (used for user switching contexts)",
+        "security": [
+          {
+            "cookieAuth": [],
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "User not exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/private/balance/{uid}": {
+      "get": {
+        "tags": ["Balance"],
+        "summary": "Get balance for a specific user",
+        "description": "Retrieve the blockchain wallet balance for a specific user",
+        "parameters": [
+          {
+            "name": "uid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "User ID to get balance for",
+              "example": "507f1f77-bcf8-6cd7-9943-9011bcf86cd7"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BalanceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error - Invalid user ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Balance owner not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/subscription/continue": {
+      "post": {
+        "tags": ["Subscription"],
+        "summary": "Continue subscription",
+        "security": [
+          {
+            "cookieAuth": [],
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContinueSubscriptionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContinueSubscriptionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error or manager wallet has insufficient balance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You are not authorized to access this resource",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Receiver not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "User not exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/refresh": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Refresh access token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokensResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error or switch info not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid refresh token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Refresh token not found or user not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/logout": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Logout user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogoutRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful logout",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogoutResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/users": {
+      "get": {
+        "tags": ["User Management"],
+        "summary": "List users with optional search and pagination",
+        "description": "Retrieves a list of users. Requires admin privileges. Supports pagination and search by first or last name.",
+        "operationId": "listUsers",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of records to skip for pagination",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of records to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Search term to filter users by first name or last name (case-insensitive)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter users by balance status",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["all", "new", "with balance", "without balance"],
+              "default": "all"
+            }
+          },
+          {
+            "name": "archived",
+            "in": "query",
+            "description": "Filter users by archived status",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error - Invalid query parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Missing or invalid authentication token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You are not authorized to perform this action",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Manager not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      }
+    },
+    "/users/switch": {
+      "post": {
+        "tags": ["User Switching"],
+        "summary": "Switch admin session to another user",
+        "description": "Allows an admin to switch their session to another user. Requires admin privileges. Sets new access and refresh tokens for the target user.",
+        "operationId": "switchUserSession",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwitchUserRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session switched successfully. Returns the target user.",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string",
+                  "example": "accessToken=xyz; refreshToken=abc"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokensResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden: can't refresh tokens or can't switch user",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Initial user not found or user not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      }
+    },
+    "/users/switch/next": {
+      "post": {
+        "tags": ["User Switching"],
+        "summary": "Switch to next user in the switch sequence",
+        "description": "Switches to the next user in the admin switch sequence. Requires active switch session.",
+        "operationId": "switchToNextUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwitchIterationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully switched to next user",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string",
+                  "example": "accessToken=xyz; refreshToken=abc"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwitchResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Already at the last user or validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden: can't refresh tokens or can't switch next user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Initial user not found, user not found, switch info not found, user not found in switch, or next user not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      }
+    },
+    "/users/switch/previous": {
+      "post": {
+        "tags": ["User Switching"],
+        "summary": "Switch to previous user in the switch sequence",
+        "description": "Switches to the previous user in the admin switch sequence. Requires active switch session.",
+        "operationId": "switchToPreviousUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwitchIterationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully switched to previous user",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string",
+                  "example": "accessToken=xyz; refreshToken=abc"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwitchResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No previous user available",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden: can't refresh tokens or can't switch previous user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Initial user not found, user not found, switch info not found, user not found in switch, or previous user not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      }
+    },
+    "/users/by-addresses": {
+      "post": {
+        "tags": ["User Management"],
+        "summary": "Get users by wallet addresses",
+        "description": "Retrieves users based on their wallet addresses. Requires admin privileges. Returns users that match any of the provided addresses.",
+        "operationId": "getUsersByAddresses",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetUsersByAddressesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List of users matching the provided addresses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error - Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Missing or invalid authentication token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to fetch users by addresses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HealthCheckResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "ok"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uptime": {
+            "type": "number",
+            "description": "Process uptime in seconds"
+          },
+          "database": {
+            "type": "string",
+            "enum": ["connected", "disconnected", "unknown"]
+          }
+        }
+      },
+      "HealthCheckDegradedResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "degraded"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uptime": {
+            "type": "number"
+          },
+          "database": {
+            "type": "string",
+            "example": "disconnected"
+          }
+        }
+      },
+      "ContinueSubscriptionRequest": {
+        "type": "object",
+        "properties": {
+          "receiver": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the user to continue subscription for",
+            "example": "507f1f77-bcf8-6cd7-9943-9011bcf86cd7"
+          }
+        },
+        "required": ["receiver"]
+      },
+      "ContinueSubscriptionResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Indicates if the subscription continuation was successful",
+            "example": true
+          }
+        },
+        "required": ["success"]
+      },
+      "PasswordLoginRequest": {
+        "type": "object",
+        "properties": {
+          "login": {
+            "type": "string",
+            "description": "Username or email",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "User password",
+            "example": "securePassword123"
+          },
+          "os": {
+            "type": "string",
+            "enum": ["windows", "linux", "macos", "android", "ios", "web"],
+            "example": "web"
+          },
+          "application": {
+            "type": "string",
+            "example": "web-app"
+          },
+          "fingerprint": {
+            "type": "string",
+            "example": "unique-device-fingerprint"
+          },
+          "source": {
+            "type": "string",
+            "example": "web"
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "Optional existing refresh token",
+            "example": "existing-refresh-token"
+          }
+        },
+        "required": [
+          "login",
+          "password",
+          "os",
+          "application",
+          "fingerprint",
+          "source"
+        ]
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "properties": {
+          "managerId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Optional manager ID for hierarchical user structures",
+            "example": "507f1f77-bcf8-6cd7-9943-9011bcf86cd7"
+          },
+          "username": {
+            "type": "string",
+            "example": "newuser"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "newuser@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "securePassword123"
+          },
+          "firstName": {
+            "type": "string",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "os": {
+            "type": "string",
+            "enum": ["windows", "linux", "macos", "android", "ios", "web"],
+            "example": "web"
+          },
+          "application": {
+            "type": "string",
+            "example": "web-app"
+          },
+          "fingerprint": {
+            "type": "string",
+            "example": "unique-device-fingerprint"
+          },
+          "source": {
+            "type": "string",
+            "example": "web"
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "Optional existing refresh token",
+            "example": "existing-refresh-token"
+          }
+        },
+        "required": [
+          "username",
+          "email",
+          "password",
+          "firstName",
+          "os",
+          "application",
+          "fingerprint",
+          "source"
+        ]
+      },
+
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "User ID"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "managerId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string",
+            "nullable": true
+          },
+          "roleName": {
+            "type": "string",
+            "description": "User role name"
+          },
+          "address": {
+            "type": "string",
+            "description": "Blockchain wallet address"
+          },
+          "checkedDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "archived": {
+            "type": "boolean"
+          },
+          "physicalActivity": {
+            "type": "string",
+            "nullable": true
+          },
+          "foodIntolerances": {
+            "type": "string",
+            "nullable": true
+          },
+          "goalWeight": {
+            "type": "string",
+            "nullable": true
+          },
+          "whereDoSports": {
+            "type": "string",
+            "nullable": true
+          },
+          "isGaveBirth": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "gaveBirth": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "breastFeeding": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "alcoholConsumption": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "contraindications": {
+            "type": "string",
+            "nullable": true
+          },
+          "eatingDisorder": {
+            "type": "string",
+            "nullable": true
+          },
+          "spineIssues": {
+            "type": "string",
+            "nullable": true
+          },
+          "endocrineDisorders": {
+            "type": "string",
+            "nullable": true
+          },
+          "gender": {
+            "type": "string",
+            "enum": ["male", "female"],
+            "nullable": true
+          },
+          "birthday": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "programDay": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "email",
+          "firstName",
+          "roleName",
+          "address",
+          "checkedDate",
+          "archived",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UsersRequest": {
+        "type": "object",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "default": 0,
+            "description": "Number of users to skip"
+          },
+          "limit": {
+            "type": "integer",
+            "default": 10,
+            "description": "Maximum number of users to return"
+          },
+          "search": {
+            "type": "string",
+            "description": "Search term to filter users by name or username"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["all", "new", "with balance", "without balance"],
+            "default": "all",
+            "description": "Filter users by status"
+          },
+          "archived": {
+            "type": "boolean",
+            "default": false,
+            "description": "Filter users by archived status"
+          }
+        }
+      },
+      "SwitchUserRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Target user ID"
+          },
+          "usersRequest": {
+            "$ref": "#/components/schemas/UsersRequest"
+          },
+          "os": {
+            "type": "string",
+            "enum": ["windows", "linux", "macos", "android", "ios", "web"],
+            "example": "android"
+          },
+          "application": {
+            "type": "string",
+            "example": "Mindcrafted Mobile v1.0"
+          },
+          "fingerprint": {
+            "type": "string",
+            "example": "60c72b2f9b1e8b001c8e4d3a"
+          },
+          "source": {
+            "type": "string",
+            "example": "Google Pixel 9"
+          },
+          "refreshToken": {
+            "type": "string",
+            "example": "abcdef123456"
+          }
+        },
+        "required": ["id", "os", "application", "fingerprint", "source"]
+      },
+
+      "BalanceResponse": {
+        "type": "object",
+        "properties": {
+          "balance": {
+            "type": "number",
+            "description": "Current balance of the user"
+          }
+        },
+        "required": ["balance"]
+      },
+
+      "GetUsersByAddressesRequest": {
+        "type": "object",
+        "required": ["addresses"],
+        "properties": {
+          "addresses": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "description": "Array of wallet addresses to search for. Must contain at least one address.",
+            "example": [
+              "0x6294C7251D145bbe9B2f529FdD6D5D42E1d0DeA4",
+              "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0"
+            ]
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Error message"
+          }
+        }
+      },
+      "ValidationErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "example": 400
+          },
+          "statusMessage": {
+            "type": "string",
+            "example": "Validation Error"
+          },
+          "message": {
+            "type": "string",
+            "example": "Validation Error"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Detailed validation issues from Zod"
+          }
+        }
+      },
+      "LogoutResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "User logged out successfully"
+          }
+        }
+      },
+
+      "TokensResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserResponse"
+          }
+        },
+        "required": ["accessToken", "refreshToken", "user"]
+      },
+      "SwitchResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["success", "return"],
+            "description": "Status of the switch operation"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserResponse"
+          },
+          "usersRequest": {
+            "$ref": "#/components/schemas/UsersRequest"
+          }
+        },
+        "required": [
+          "accessToken",
+          "refreshToken",
+          "status",
+          "user",
+          "usersRequest"
+        ]
+      },
+      "LogoutRequest": {
+        "type": "object",
+        "properties": {
+          "fingerprint": {
+            "type": "string",
+            "example": "60c72b2f9b1e8b001c8e4d3a"
+          },
+          "refreshToken": {
+            "type": "string",
+            "example": "abcdef123456"
+          }
+        },
+        "required": ["fingerprint"]
+      },
+      "RefreshRequest": {
+        "type": "object",
+        "properties": {
+          "os": {
+            "type": "string",
+            "enum": ["windows", "linux", "macos", "android", "ios", "web"],
+            "example": "android"
+          },
+          "application": {
+            "type": "string",
+            "example": "Mindcrafted Mobile v1.0"
+          },
+          "fingerprint": {
+            "type": "string",
+            "example": "60c72b2f9b1e8b001c8e4d3a"
+          },
+          "source": {
+            "type": "string",
+            "example": "Google Pixel 9"
+          },
+          "refreshToken": {
+            "type": "string",
+            "example": "abcdef123456"
+          }
+        },
+        "required": ["os", "application", "fingerprint", "source"]
+      },
+      "SwitchIterationRequest": {
+        "type": "object",
+        "properties": {
+          "os": {
+            "type": "string",
+            "enum": ["windows", "linux", "macos", "android", "ios", "web"],
+            "example": "android"
+          },
+          "application": {
+            "type": "string",
+            "example": "Mindcrafted Mobile v1.0"
+          },
+          "fingerprint": {
+            "type": "string",
+            "example": "60c72b2f9b1e8b001c8e4d3a"
+          },
+          "source": {
+            "type": "string",
+            "example": "Google Pixel 9"
+          },
+          "refreshToken": {
+            "type": "string",
+            "example": "abcdef123456"
+          }
+        },
+        "required": ["os", "application", "fingerprint", "source"]
+      }
+    },
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "accessToken",
+        "description": "Access token stored in cookie (checked first)"
+      },
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Access token in Authorization header (fallback if cookie not present)"
+      }
+    }
+  }
+}
