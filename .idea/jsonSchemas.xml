@@ -16,6 +16,9 @@
                   <Item>
                     <option name="path" value="mobile-authoriztion.json" />
                   </Item>
+                  <Item>
+                    <option name="path" value="mobile-measurements.json" />
+                  </Item>
                 </list>
               </option>
             </SchemaInfo>

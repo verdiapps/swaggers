@@ -1,8 +1,8 @@
 {
-  "json.schemas": [
-    {
-      "fileMatch": ["mobile-authorization.json"],
-      "url": "https://spec.openapis.org/oas/3.0/schema/2024-10-18"
-    }
-  ]
+	"json.schemas": [
+		{
+			"fileMatch": ["mobile-authorization.json", "mobile-measurements.json"],
+			"url": "https://spec.openapis.org/oas/3.0/schema/2024-10-18"
+		}
+	]
 }
