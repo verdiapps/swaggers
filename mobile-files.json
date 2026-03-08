@@ -1,0 +1,945 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Mobile Files API",
+    "version": "1.0.0",
+    "description": "API for uploading, retrieving, and managing files, images, and videos"
+  },
+  "security": [
+    { "bearerAuth": [] },
+    { "cookieAuth": [] }
+  ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Health check endpoints"
+    },
+    {
+      "name": "Files",
+      "description": "Generic file upload and management"
+    },
+    {
+      "name": "Images",
+      "description": "Image upload and metadata"
+    },
+    {
+      "name": "Videos",
+      "description": "Video upload and metadata"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health check endpoint",
+        "description": "Check the health status of the service and database connectivity",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service is degraded (database disconnected)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "post": {
+        "tags": ["Files"],
+        "summary": "Upload a generic file",
+        "description": "Upload any file via multipart/form-data. The file is saved to disk and a record is created in the database. Requires authentication via Bearer token or accessToken cookie.",
+        "security": [
+          { "bearerAuth": [] },
+          { "cookieAuth": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "The file to upload"
+                  }
+                },
+                "required": ["file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileRecord"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — invalid multipart request, no file field present, or upload error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "499": {
+            "description": "Request aborted by the client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{id}": {
+      "get": {
+        "tags": ["Files"],
+        "summary": "Download a file by ID",
+        "description": "Stream the raw file content. The `id` parameter may include a file extension (e.g. `uuid.jpg`). Returns the file with appropriate Content-Type, Content-Disposition, and Content-Length headers.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "UUID of the file, optionally suffixed with its extension (e.g. `550e8400-e29b-41d4-a716-446655440000.png`)",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(\\.[a-zA-Z0-9]+)?$",
+              "example": "550e8400-e29b-41d4-a716-446655440000.png"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File content streamed successfully",
+            "headers": {
+              "Content-Type": {
+                "schema": { "type": "string" },
+                "description": "MIME type of the file"
+              },
+              "Content-Disposition": {
+                "schema": { "type": "string" },
+                "description": "Inline disposition with filename"
+              },
+              "Content-Length": {
+                "schema": { "type": "string" },
+                "description": "Size of the file in bytes"
+              },
+              "Last-Modified": {
+                "schema": { "type": "string" },
+                "description": "Last modification date of the file on disk"
+              },
+              "Accept-Ranges": {
+                "schema": { "type": "string", "example": "bytes" }
+              }
+            },
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error — invalid ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "File not found in database or not found on disk",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Files"],
+        "summary": "Delete a file by ID",
+        "description": "Delete a file record and its data from disk. If the file is a video, its preview image is also deleted. If it is an image, the image record is removed as well. Requires authentication.",
+        "security": [
+          { "bearerAuth": [] },
+          { "cookieAuth": [] }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "UUID of the file, optionally suffixed with its extension (e.g. `550e8400-e29b-41d4-a716-446655440000.mp4`)",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(\\.[a-zA-Z0-9]+)?$",
+              "example": "550e8400-e29b-41d4-a716-446655440000.mp4"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error — invalid ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "File not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{id}/metadata": {
+      "get": {
+        "tags": ["Files"],
+        "summary": "Get file metadata",
+        "description": "Returns the raw file database record including baseName, fileExtension, mimeType, userId, and timestamps.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "UUID of the file, optionally suffixed with its extension",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(\\.[a-zA-Z0-9]+)?$",
+              "example": "550e8400-e29b-41d4-a716-446655440000.png"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File metadata returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileRecord"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error — invalid ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "File not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/images": {
+      "post": {
+        "tags": ["Images"],
+        "summary": "Upload an image",
+        "description": "Upload an image file via multipart/form-data. The image is converted to AVIF format, a thumbhash is computed, and width/height are extracted. Requires authentication via Bearer token or accessToken cookie.",
+        "security": [
+          { "bearerAuth": [] },
+          { "cookieAuth": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Image file to upload (must have an image/* MIME type)"
+                  }
+                },
+                "required": ["file"]
+              },
+              "encoding": {
+                "file": {
+                  "contentType": "image/*"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Image uploaded and processed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageWithFile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — invalid multipart request, non-image MIME type, no file present, or upload error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "499": {
+            "description": "Request aborted by the client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/images/{id}/metadata": {
+      "get": {
+        "tags": ["Images"],
+        "summary": "Get image metadata",
+        "description": "Returns the image record (width, height, thumbHash, original MIME type) along with the associated file record.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "UUID of the image file, optionally suffixed with its extension (e.g. `550e8400-e29b-41d4-a716-446655440000.avif`)",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(\\.[a-zA-Z0-9]+)?$",
+              "example": "550e8400-e29b-41d4-a716-446655440000.avif"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Image metadata returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageWithFile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error — invalid ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Image not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/videos": {
+      "post": {
+        "tags": ["Videos"],
+        "summary": "Upload a video",
+        "description": "Upload a video file via multipart/form-data. The video is probed with ffprobe to extract metadata, re-encoded to AV1/MP4, and a preview image (PNG) is generated automatically unless a `preview` field is also provided in the same multipart request. Requires authentication via Bearer token or accessToken cookie.\n\n**Multipart fields:**\n- `file` (required) — the video file (must have a `video/*` MIME type)\n- `preview` (optional) — a custom preview image (must have an `image/*` MIME type); if provided before the `file` field it is used during processing, if provided after the `file` field the auto-generated preview is replaced",
+        "security": [
+          { "bearerAuth": [] },
+          { "cookieAuth": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Video file to upload (must have a video/* MIME type)"
+                  },
+                  "preview": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Optional custom preview image (must have an image/* MIME type)"
+                  }
+                },
+                "required": ["file"]
+              },
+                            "encoding": {
+                "file": {
+                  "contentType": "video/*"
+                },
+                "preview": {
+                  "contentType": "image/*"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Video uploaded, processed, and stored successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoWithRelations"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — invalid multipart request, non-video MIME type, missing video stream, missing dimensions, no file present, or upload error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "499": {
+            "description": "Request aborted by the client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/videos/{id}/metadata": {
+      "get": {
+        "tags": ["Videos"],
+        "summary": "Get video metadata",
+        "description": "Returns the video record (encoding, dimensions, duration, original MIME type) together with the associated file record and preview image record.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "UUID of the video file, optionally suffixed with its extension (e.g. `550e8400-e29b-41d4-a716-446655440000.mp4`)",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(\\.[a-zA-Z0-9]+)?$",
+              "example": "550e8400-e29b-41d4-a716-446655440000.mp4"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Video metadata returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoWithRelations"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error — invalid ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Video not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT access token provided in the Authorization header as `Bearer <token>`. Checked first; falls back to cookieAuth if absent."
+      },
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "accessToken",
+        "description": "JWT access token stored in the `accessToken` cookie. Used as a fallback when the Authorization header is not present."
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "nullable": false,
+            "enum": ["ok", "degraded"],
+            "description": "Overall health status of the service",
+            "example": "ok"
+          },
+          "timestamp": {
+            "type": "string",
+            "nullable": false,
+            "format": "date-time",
+            "description": "Current server timestamp"
+          },
+          "uptime": {
+            "type": "number",
+            "nullable": false,
+            "description": "Server uptime in seconds"
+          },
+          "database": {
+            "type": "string",
+            "nullable": false,
+            "enum": ["connected", "disconnected", "unknown"],
+            "description": "Database connection status"
+          }
+        },
+        "required": ["status", "timestamp", "uptime", "database"]
+      },
+      "FileRecord": {
+        "type": "object",
+        "description": "A raw file database record as stored in the `default_files` table",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": false,
+            "format": "uuid",
+            "description": "Unique identifier of the file",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "userId": {
+            "type": "string",
+            "nullable": false,
+            "format": "uuid",
+            "description": "ID of the user who uploaded the file",
+            "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "baseName": {
+            "type": "string",
+            "nullable": false,
+            "description": "File name without extension",
+            "example": "my-photo"
+          },
+          "fileExtension": {
+            "type": "string",
+            "nullable": true,
+            "description": "File extension without the leading dot (e.g. `png`, `mp4`). May be null for files without an extension.",
+            "example": "avif"
+          },
+          "mimeType": {
+            "type": "string",
+            "nullable": false,
+            "description": "MIME type of the stored file",
+            "example": "image/avif"
+          },
+          "createdAt": {
+            "type": "string",
+            "nullable": false,
+            "format": "date-time",
+            "description": "Timestamp when the record was created"
+          },
+          "updatedAt": {
+            "type": "string",
+            "nullable": false,
+            "format": "date-time",
+            "description": "Timestamp when the record was last updated"
+          }
+        },
+        "required": ["id", "userId", "baseName", "fileExtension", "mimeType", "createdAt", "updatedAt"]
+      },
+      "ImageRecord": {
+        "type": "object",
+        "description": "An image database record as stored in the `images` table",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": false,
+            "format": "uuid",
+            "description": "Same UUID as the associated file record",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "originalFileExtension": {
+            "type": "string",
+            "nullable": true,
+            "description": "Extension of the originally uploaded file before AVIF conversion",
+            "example": "jpg"
+          },
+          "originalMimeType": {
+            "type": "string",
+            "nullable": false,
+            "description": "MIME type of the originally uploaded file",
+            "example": "image/jpeg"
+          },
+          "width": {
+            "type": "integer",
+            "nullable": false,
+            "description": "Width of the stored (converted) image in pixels",
+            "example": 1920
+          },
+          "height": {
+            "type": "integer",
+            "nullable": false,
+            "description": "Height of the stored (converted) image in pixels",
+            "example": 1080
+          },
+          "thumbHash": {
+            "type": "string",
+            "nullable": false,
+            "description": "Base64-encoded ThumbHash of the image for low-quality placeholder generation",
+            "example": "1QcSHQRnh493V4dIh4eXh1h4"
+          },
+          "createdAt": {
+            "type": "string",
+            "nullable": false,
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "nullable": false,
+            "format": "date-time"
+          }
+        },
+        "required": ["id", "originalFileExtension", "originalMimeType", "width", "height", "thumbHash", "createdAt", "updatedAt"]
+      },
+      "ImageWithFile": {
+        "type": "object",
+        "description": "Image record enriched with its associated file record",
+        "allOf": [
+          { "$ref": "#/components/schemas/ImageRecord" }
+        ],
+        "properties": {
+          "file": {
+            "$ref": "#/components/schemas/FileRecord"
+          }
+        },
+        "required": ["file"]
+      },
+      "VideoRecord": {
+        "type": "object",
+        "description": "A video database record as stored in the `videos` table",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": false,
+            "format": "uuid",
+            "description": "Same UUID as the associated file record",
+            "example": "660e8400-e29b-41d4-a716-446655440000"
+          },
+          "encoding": {
+            "type": "string",
+            "nullable": false,
+            "description": "Codec used for the stored video file",
+            "example": "av1"
+          },
+          "originalEncoding": {
+            "type": "string",
+            "nullable": false,
+            "description": "Codec of the originally uploaded video",
+            "example": "h264"
+          },
+          "originalFileExtension": {
+            "type": "string",
+            "nullable": true,
+            "description": "Extension of the originally uploaded file",
+            "example": "mov"
+          },
+          "originalMimeType": {
+            "type": "string",
+            "nullable": false,
+            "description": "MIME type of the originally uploaded file",
+            "example": "video/quicktime"
+          },
+          "width": {
+            "type": "integer",
+            "nullable": false,
+            "description": "Width of the video in pixels",
+            "example": 1920
+          },
+          "height": {
+            "type": "integer",
+            "nullable": false,
+            "description": "Height of the video in pixels",
+            "example": 1080
+          },
+          "duration": {
+            "type": "string",
+            "nullable": false,
+            "description": "Duration of the video in seconds (stored as a decimal string)",
+            "example": "42.567000"
+          },
+          "previewId": {
+            "type": "string",
+            "nullable": false,
+            "format": "uuid",
+            "description": "UUID of the preview image record",
+            "example": "770e8400-e29b-41d4-a716-446655440000"
+          },
+          "createdAt": {
+            "type": "string",
+            "nullable": false,
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "nullable": false,
+            "format": "date-time"
+          }
+        },
+        "required": ["id", "encoding", "originalEncoding", "originalFileExtension", "originalMimeType", "width", "height", "duration", "previewId", "createdAt", "updatedAt"]
+      },
+      "VideoWithRelations": {
+        "type": "object",
+        "description": "Video record enriched with its associated file record and preview image (with its own file record)",
+        "allOf": [
+          { "$ref": "#/components/schemas/VideoRecord" }
+        ],
+        "properties": {
+          "file": {
+            "$ref": "#/components/schemas/FileRecord"
+          },
+          "preview": {
+            "$ref": "#/components/schemas/ImageWithFile"
+          }
+        },
+        "required": ["file", "preview"]
+      },
+      "DeleteResponse": {
+        "type": "object",
+        "description": "Confirmation message returned after a successful delete operation",
+        "properties": {
+          "message": {
+            "type": "string",
+            "nullable": false,
+            "description": "Human-readable description of what was deleted",
+            "enum": [
+              "File deleted successfully",
+              "Image deleted successfully",
+              "Video and its preview deleted successfully"
+            ],
+            "example": "File deleted successfully"
+          }
+        },
+        "required": ["message"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "description": "Generic error response returned by H3/Nitro createError",
+        "properties": {
+          "statusCode": {
+            "type": "integer",
+            "nullable": false,
+            "description": "HTTP status code",
+            "example": 404
+          },
+          "statusMessage": {
+            "type": "string",
+            "nullable": false,
+            "description": "Short status message",
+            "example": "Not Found"
+          },
+          "message": {
+            "type": "string",
+            "nullable": false,
+            "description": "Detailed error message",
+            "example": "File not found"
+          }
+        },
+        "required": ["statusCode", "statusMessage", "message"]
+      },
+      "ValidationErrorResponse": {
+        "type": "object",
+        "description": "Error response produced by zodValidateData when a Zod schema fails validation",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "nullable": false,
+            "example": 400
+          },
+          "statusMessage": {
+            "type": "string",
+            "nullable": false,
+            "example": "Validation Error"
+          },
+          "message": {
+            "type": "string",
+            "nullable": false,
+            "example": "Validation Error"
+          },
+          "data": {
+            "type": "array",
+            "nullable": true,
+            "description": "Array of Zod validation issues",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "nullable": false,
+                  "description": "Zod error code",
+                  "example": "invalid_string"
+                },
+                "path": {
+                  "type": "array",
+                  "nullable": false,
+                  "description": "Path to the field that failed validation",
+                  "items": {
+                    "oneOf": [
+                      { "type": "string" },
+                      { "type": "integer" }
+                    ]
+                  },
+                  "example": ["id"]
+                },
+                "message": {
+                  "type": "string",
+                  "nullable": false,
+                  "description": "Human-readable description of the validation failure",
+                  "example": "Invalid uuid"
+                }
+              }
+            }
+          }
+        },
+        "required": ["status", "statusMessage", "message", "data"]
+      }
+    }
+  }
+}
