@@ -19,6 +19,9 @@
                   <Item>
                     <option name="path" value="mobile-measurements.json" />
                   </Item>
+                  <Item>
+                    <option name="path" value="mobile-files.json" />
+                  </Item>
                 </list>
               </option>
             </SchemaInfo>
