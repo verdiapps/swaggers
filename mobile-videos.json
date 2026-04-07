@@ -1,0 +1,993 @@
+{
+	"openapi": "3.0.3",
+	"info": {
+		"title": "Mobile Videos API",
+		"version": "1.0.0",
+		"description": "OpenAPI specification for the mobile-videos service. This spec re-uses file-related schemas from the mobile-files swagger for proxied file endpoints."
+	},
+	"servers": [
+		{
+			"url": "http://localhost:3000",
+			"description": "Local dev server"
+		}
+	],
+	"security": [
+		{
+			"bearerAuth": []
+		},
+		{
+			"cookieAuth": []
+		}
+	],
+	"tags": [
+		{
+			"name": "Health",
+			"description": "Service health"
+		},
+		{
+			"name": "Videos",
+			"description": "Video resource operations"
+		},
+		{
+			"name": "Previews",
+			"description": "Video preview (image) operations"
+		}
+	],
+	"paths": {
+		"/health": {
+			"get": {
+				"tags": ["Health"],
+				"summary": "Health check",
+				"description": "Check the health of the service and DB connectivity",
+				"security": [],
+				"responses": {
+					"200": {
+						"description": "Service is healthy",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/HealthResponse"
+								}
+							}
+						}
+					},
+					"503": {
+						"description": "Service degraded",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/HealthResponse"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/": {
+			"get": {
+				"tags": ["Videos"],
+				"summary": "List videos",
+				"description": "List videos for the authenticated user. Supports limit, offset, status and unlockOffset filters.",
+				"security": [
+					{
+						"bearerAuth": []
+					},
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "limit",
+						"in": "query",
+						"schema": {
+							"type": "integer",
+							"minimum": 1
+						},
+						"required": false
+					},
+					{
+						"name": "offset",
+						"in": "query",
+						"schema": {
+							"type": "integer",
+							"minimum": 0
+						},
+						"required": false
+					},
+					{
+						"name": "status",
+						"in": "query",
+						"schema": {
+							"type": "string",
+							"enum": ["all", "watched", "viewed", "not viewed"],
+							"default": "all"
+						},
+						"required": false
+					},
+					{
+						"name": "unlockOffset",
+						"in": "query",
+						"schema": {
+							"type": "string",
+							"format": "interval"
+						},
+						"required": false
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Array of videos",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/VideoWithRelations"
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/schemas/ErrorResponse"
+					}
+				}
+			},
+			"post": {
+				"tags": ["Videos"],
+				"summary": "Create a video (multipart upload)",
+				"description": "Upload a video file (and optional preview) and create a video record. This proxies the file upload to the files service.",
+				"security": [
+					{
+						"bearerAuth": []
+					},
+					{
+						"cookieAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"multipart/form-data": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"file": {
+										"type": "string",
+										"format": "binary",
+										"description": "The main video file"
+									},
+									"preview": {
+										"type": "string",
+										"format": "binary",
+										"description": "Optional preview image file"
+									},
+									"title": {
+										"type": "string"
+									},
+									"description": {
+										"type": "string"
+									},
+									"unlockOffset": {
+										"type": "string",
+										"description": "Postgres interval string"
+									},
+									"rank": {
+										"type": "string",
+										"description": "LexoRank string"
+									}
+								},
+								"required": ["file"]
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Video created successfully (or with partial field validation)",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"video": {
+											"$ref": "#/components/schemas/VideoWithRelations"
+										},
+										"errors": {
+											"$ref": "#/components/schemas/ValidationErrorResponse"
+										}
+									},
+									"required": ["video"]
+								}
+							}
+						}
+					},
+					"207": {
+						"description": "Created with partial validation errors",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationErrorResponse"
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/schemas/ErrorResponse"
+					},
+					"401": {
+						"$ref": "#/components/schemas/ErrorResponse"
+					}
+				}
+			}
+		},
+		"/{id}": {
+			"parameters": [
+				{
+					"name": "id",
+					"in": "path",
+					"required": true,
+					"schema": {
+						"type": "string",
+						"pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\\.[a-zA-Z0-9]+)?$"
+					},
+					"description": "File id (UUID optionally with extension)"
+				}
+			],
+			"get": {
+				"tags": ["Videos"],
+				"summary": "Get video file (proxied)",
+				"description": "Returns the raw video file proxied from the mobile-files service (binary stream).",
+				"security": [
+					{
+						"bearerAuth": []
+					},
+					{
+						"cookieAuth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Binary file stream",
+						"headers": {
+							"Content-Type": {
+								"schema": {
+									"type": "string"
+								},
+								"description": "Mime type of the file"
+							},
+							"Content-Disposition": {
+								"schema": {
+									"type": "string"
+								},
+								"description": "Content disposition header"
+							},
+							"Content-Length": {
+								"schema": {
+									"type": "integer"
+								},
+								"description": "Length of the response"
+							},
+							"Last-Modified": {
+								"schema": {
+									"type": "string"
+								},
+								"description": "Last modified date"
+							},
+							"Accept-Ranges": {
+								"schema": {
+									"type": "string",
+									"example": "bytes"
+								}
+							}
+						},
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "string",
+									"format": "binary"
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/schemas/ErrorResponse"
+					},
+					"404": {
+						"$ref": "#/components/schemas/ErrorResponse"
+					}
+				}
+			},
+			"put": {
+				"tags": ["Videos"],
+				"summary": "Update video metadata",
+				"description": "Update title/description/unlockOffset/rank for a video.",
+				"security": [
+					{
+						"bearerAuth": []
+					},
+					{
+						"cookieAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"title": {
+										"type": "string",
+										"maxLength": 1024
+									},
+									"description": {
+										"type": "string"
+									},
+									"unlockOffset": {
+										"type": "string"
+									},
+									"rank": {
+										"type": "string",
+										"maxLength": 255
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Updated video",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/VideoWithRelations"
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/schemas/ErrorResponse"
+					},
+					"401": {
+						"$ref": "#/components/schemas/ErrorResponse"
+					},
+					"404": {
+						"$ref": "#/components/schemas/ErrorResponse"
+					}
+				}
+			},
+			"delete": {
+				"tags": ["Videos"],
+				"summary": "Delete a video",
+				"description": "Delete the video record and its preview, and request file deletion in the files service.",
+				"security": [
+					{
+						"bearerAuth": []
+					},
+					{
+						"cookieAuth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Delete result",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"message": {
+											"type": "string"
+										},
+										"video": {
+											"$ref": "#/components/schemas/VideoWithRelations"
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/schemas/ErrorResponse"
+					},
+					"401": {
+						"$ref": "#/components/schemas/ErrorResponse"
+					},
+					"404": {
+						"$ref": "#/components/schemas/ErrorResponse"
+					}
+				}
+			}
+		},
+		"/{id}/metadata": {
+			"get": {
+				"tags": ["Videos"],
+				"summary": "Get video metadata",
+				"description": "Return database metadata for the video (including preview and user's status if any).",
+				"security": [
+					{
+						"bearerAuth": []
+					},
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						},
+						"description": "File id (UUID optionally with extension)"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Video metadata",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/VideoWithRelations"
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/schemas/ErrorResponse"
+					},
+					"404": {
+						"$ref": "#/components/schemas/ErrorResponse"
+					}
+				}
+			}
+		},
+		"/{id}/status": {
+			"post": {
+				"tags": ["Videos"],
+				"summary": "Create or update video status for the user",
+				"description": "Create or update watched status and watch progress for the authenticated user on a given video.",
+				"security": [
+					{
+						"bearerAuth": []
+					},
+					{
+						"cookieAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"watched": {
+										"type": "boolean"
+									},
+									"watchProgress": {
+										"type": "string"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Status created/updated",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/VideoStatus"
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/schemas/ErrorResponse"
+					},
+					"404": {
+						"$ref": "#/components/schemas/ErrorResponse"
+					},
+					"401": {
+						"$ref": "#/components/schemas/ErrorResponse"
+					}
+				}
+			},
+			"delete": {
+				"tags": ["Videos"],
+				"summary": "Delete video status for the user",
+				"description": "Delete the user's status (watched/progress) for the given video.",
+				"security": [
+					{
+						"bearerAuth": []
+					},
+					{
+						"cookieAuth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Status deleted",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"message": {
+											"type": "string"
+										},
+										"videoStatus": {
+											"$ref": "#/components/schemas/VideoStatus"
+										}
+									}
+								}
+							}
+						}
+					},
+					"404": {
+						"$ref": "#/components/schemas/ErrorResponse"
+					}
+				}
+			}
+		},
+		"/previews/{id}": {
+			"get": {
+				"tags": ["Previews"],
+				"summary": "Get preview image (proxied)",
+				"description": "Return raw preview image proxied from the files service.",
+				"security": [
+					{
+						"bearerAuth": []
+					},
+					{
+						"cookieAuth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Binary image stream",
+						"content": {
+							"*/*": {
+								"schema": {
+									"type": "string",
+									"format": "binary"
+								}
+							}
+						}
+					},
+					"404": {
+						"$ref": "#/components/schemas/ErrorResponse"
+					}
+				}
+			}
+		},
+		"/previews/{id}/metadata": {
+			"get": {
+				"tags": ["Previews"],
+				"summary": "Get preview metadata",
+				"description": "Return preview metadata stored in the videos DB.",
+				"security": [
+					{
+						"bearerAuth": []
+					},
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Preview metadata",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ImageWithFile"
+								}
+							}
+						}
+					},
+					"404": {
+						"$ref": "#/components/schemas/ErrorResponse"
+					}
+				}
+			}
+		}
+	},
+	"components": {
+		"securitySchemes": {
+			"bearerAuth": {
+				"type": "http",
+				"scheme": "bearer",
+				"bearerFormat": "JWT",
+				"description": "Provide a Bearer token"
+			},
+			"cookieAuth": {
+				"type": "apiKey",
+				"in": "cookie",
+				"name": "accessToken",
+				"description": "Provide accessToken cookie"
+			}
+		},
+		"schemas": {
+			"HealthResponse": {
+				"type": "object",
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": ["ok", "degraded"],
+						"description": "Service status"
+					},
+					"timestamp": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"uptime": {
+						"type": "number"
+					},
+					"database": {
+						"type": "string",
+						"enum": ["unknown", "connected", "disconnected"]
+					}
+				},
+				"required": ["status", "timestamp", "uptime", "database"]
+			},
+			"FileRecord": {
+				"type": "object",
+				"description": "File record returned from the files DB",
+				"properties": {
+					"id": {
+						"type": "string",
+						"format": "uuid",
+						"description": "File id"
+					},
+					"userId": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"baseName": {
+						"type": "string"
+					},
+					"fileExtension": {
+						"type": "string",
+						"nullable": true,
+						"description": "File extension without the leading dot (e.g. `png`, `mp4`). May be null for files without an extension."
+					},
+					"mimeType": {
+						"type": "string",
+						"description": "Detected mime type"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time",
+						"nullable": true
+					},
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time",
+						"nullable": true
+					}
+				},
+				"required": [
+					"id",
+					"userId",
+					"baseName",
+					"fileExtension",
+					"mimeType",
+					"createdAt",
+					"updatedAt"
+				]
+			},
+			"ImageRecord": {
+				"type": "object",
+				"description": "Preview image record stored in DB",
+				"properties": {
+					"id": {
+						"type": "string",
+						"format": "uuid",
+						"description": "Preview id"
+					},
+					"originalFileExtension": {
+						"type": "string",
+						"nullable": true,
+						"description": "Extension of the originally uploaded file before conversion"
+					},
+					"originalMimeType": {
+						"type": "string",
+						"nullable": true,
+						"description": "Mime type of original uploaded image"
+					},
+					"width": {
+						"type": "integer",
+						"nullable": true
+					},
+					"height": {
+						"type": "integer",
+						"nullable": true
+					},
+					"thumbHash": {
+						"type": "string",
+						"nullable": true
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time",
+						"nullable": true
+					},
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time",
+						"nullable": true
+					}
+				},
+				"required": [
+					"id",
+					"originalFileExtension",
+					"originalMimeType",
+					"width",
+					"height",
+					"thumbHash",
+					"createdAt",
+					"updatedAt"
+				]
+			},
+			"ImageWithFile": {
+				"type": "object",
+				"description": "Image record with associated file record",
+				"allOf": [
+					{
+						"$ref": "#/components/schemas/ImageRecord"
+					}
+				],
+				"properties": {
+					"file": {
+						"$ref": "#/components/schemas/FileRecord"
+					}
+				},
+				"required": [
+					"id",
+					"originalFileExtension",
+					"originalMimeType",
+					"width",
+					"height",
+					"thumbHash",
+					"createdAt",
+					"updatedAt",
+					"file"
+				]
+			},
+			"VideoRecord": {
+				"type": "object",
+				"description": "Video metadata record stored in DB",
+				"properties": {
+					"id": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"encoding": {
+						"type": "string",
+						"nullable": true,
+						"description": "Internal encoding used"
+					},
+					"originalEncoding": {
+						"type": "string",
+						"nullable": true
+					},
+					"originalFileExtension": {
+						"type": "string",
+						"nullable": true
+					},
+					"originalMimeType": {
+						"type": "string",
+						"nullable": true
+					},
+					"width": {
+						"type": "integer",
+						"nullable": true
+					},
+					"height": {
+						"type": "integer",
+						"nullable": true
+					},
+					"duration": {
+						"type": "string",
+						"nullable": true,
+						"description": "Duration as string preserved from the files service"
+					},
+					"previewId": {
+						"type": "string",
+						"format": "uuid",
+						"nullable": true
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time",
+						"nullable": true
+					},
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time",
+						"nullable": true
+					},
+					"fileId": {
+						"type": "string",
+						"format": "uuid",
+						"nullable": true
+					},
+					"encodingVersion": {
+						"type": "string",
+						"nullable": true
+					}
+				},
+				"required": [
+					"id",
+					"encoding",
+					"originalEncoding",
+					"originalFileExtension",
+					"originalMimeType",
+					"width",
+					"height",
+					"duration",
+					"previewId",
+					"createdAt",
+					"updatedAt",
+					"fileId",
+					"encodingVersion"
+				]
+			},
+			"VideoWithRelations": {
+				"type": "object",
+				"description": "Video record with related file and preview",
+				"allOf": [
+					{
+						"$ref": "#/components/schemas/VideoRecord"
+					}
+				],
+				"properties": {
+					"file": {
+						"$ref": "#/components/schemas/FileRecord"
+					},
+					"preview": {
+						"$ref": "#/components/schemas/ImageRecord"
+					}
+				},
+				"required": [
+					"id",
+					"encoding",
+					"originalEncoding",
+					"originalFileExtension",
+					"originalMimeType",
+					"width",
+					"height",
+					"duration",
+					"previewId",
+					"createdAt",
+					"updatedAt",
+					"fileId",
+					"encodingVersion",
+					"file",
+					"preview"
+				]
+			},
+			"VideoStatus": {
+				"type": "object",
+				"properties": {
+					"videoId": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"userId": {
+						"type": "string",
+						"format": "uuid"
+					},
+					"watched": {
+						"type": "boolean"
+					},
+					"watchProgress": {
+						"type": "string",
+						"nullable": true
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time",
+						"nullable": true
+					},
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time",
+						"nullable": true
+					}
+				},
+				"required": [
+					"videoId",
+					"userId",
+					"watched",
+					"watchProgress",
+					"createdAt",
+					"updatedAt"
+				]
+			},
+			"DeleteResponse": {
+				"type": "object",
+				"properties": {
+					"message": {
+						"type": "string",
+						"example": "Deleted successfully"
+					}
+				},
+				"required": ["message"]
+			},
+			"ErrorResponse": {
+				"type": "object",
+				"properties": {
+					"statusCode": {
+						"type": "integer"
+					},
+					"statusMessage": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": ["message"]
+			},
+			"ValidationErrorResponse": {
+				"type": "object",
+				"properties": {
+					"status": {
+						"type": "integer"
+					},
+					"statusMessage": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"code": {
+									"type": "string"
+								},
+								"path": {
+									"type": "array",
+									"items": {
+										"oneOf": [
+											{
+												"type": "string"
+											},
+											{
+												"type": "integer"
+											}
+										]
+									}
+								},
+								"message": {
+									"type": "string"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
