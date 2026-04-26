@@ -143,6 +143,282 @@
 				}
 			}
 		},
+		"/auth/verify-email": {
+			"post": {
+				"tags": ["Authentication"],
+				"summary": "Verify email address with code",
+				"description": "Verifies the user's email address using a verification code. On success, issues authentication tokens for immediate login.",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/VerifyEmailRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Email verified successfully, tokens issued",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/TokensResponse"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid or expired verification code",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Verification code or user not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"429": {
+						"description": "Too many verification attempts",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/wizard/step": {
+			"put": {
+				"tags": ["Wizard"],
+				"summary": "Update wizard step data",
+				"description": "Partially update the user's profile and measurements. Coordinating service for the onboarding wizard.",
+				"security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ProfileUpdateRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Step updated successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"user": { "$ref": "#/components/schemas/UserResponse" }
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/change-password": {
+			"post": {
+				"tags": ["Authentication"],
+				"summary": "Change user password",
+				"description": "Allows an authenticated user to change their password by providing the old password and a new one.",
+				"security": [
+					{
+						"cookieAuth": [],
+						"bearerAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ChangePasswordRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Password changed successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"message": { "type": "string", "example": "Password changed successfully" }
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid old password or validation error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/forgot-password": {
+			"post": {
+				"tags": ["Authentication"],
+				"summary": "Request password reset",
+				"description": "Sends a password reset code to the provided email address if the user exists.",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ForgotPasswordRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Email sent successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"message": { "type": "string", "example": "Email sent successfully" }
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/reset-password": {
+			"post": {
+				"tags": ["Authentication"],
+				"summary": "Reset password using code",
+				"description": "Updates the user's password using a verification code sent via email.",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ResetPasswordRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Password reset successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"message": { "type": "string", "example": "Password reset successfully" }
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid code or expired",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"429": {
+						"description": "Too many attempts",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/resend-email-code": {
+			"post": {
+				"tags": ["Authentication"],
+				"summary": "Resend email verification code",
+				"description": "Generates and sends a new verification code to the user's email address.",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ResendEmailCodeRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Verification code resent successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"message": { "type": "string", "example": "Verification code resent" }
+									}
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "User not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
 		"/": {
 			"get": {
 				"tags": ["User"],
@@ -587,6 +863,123 @@
 						"cookieAuth": []
 					}
 				]
+			}
+		},
+		"/users/update-email": {
+			"post": {
+				"tags": ["User Management"],
+				"summary": "Initiate email update",
+				"description": "Sends a verification code to the current email address to start the email update process.",
+				"security": [
+					{
+						"cookieAuth": [],
+						"bearerAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateEmailRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Verification code sent to current email",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"message": { "type": "string" },
+										"email": { "type": "string" }
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/users/update-email/verify-old": {
+			"post": {
+				"tags": ["User Management"],
+				"summary": "Verify old email for update",
+				"description": "Verifies the code sent to the current email. If successful, sends a new verification code to the new email address.",
+				"security": [
+					{
+						"cookieAuth": [],
+						"bearerAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/VerifyOldEmailRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Verification code sent to new email",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"message": { "type": "string" },
+										"email": { "type": "string" }
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/users/update-email/verify-new": {
+			"post": {
+				"tags": ["User Management"],
+				"summary": "Verify new email and complete update",
+				"description": "Verifies the code sent to the new email and updates the user's email address in the database.",
+				"security": [
+					{
+						"cookieAuth": [],
+						"bearerAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/VerifyNewEmailRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Email updated successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"message": { "type": "string" },
+										"email": { "type": "string" }
+									}
+								}
+							}
+						}
+					}
+				}
 			}
 		},
 		"/users/switch": {
@@ -1961,6 +2354,101 @@
 					}
 				},
 				"required": ["os", "application", "fingerprint", "source"]
+			},
+			"ChangePasswordRequest": {
+				"type": "object",
+				"properties": {
+					"oldPassword": { "type": "string" },
+					"newPassword": { "type": "string", "minLength": 8 }
+				},
+				"required": ["oldPassword", "newPassword"]
+			},
+			"VerifyEmailRequest": {
+				"type": "object",
+				"properties": {
+					"email": { "type": "string", "format": "email" },
+					"code": { "type": "string" },
+					"os": {
+						"type": "string",
+						"enum": ["windows", "linux", "macos", "android", "ios", "web"]
+					},
+					"application": { "type": "string" },
+					"fingerprint": { "type": "string" },
+					"source": { "type": "string" }
+				},
+				"required": ["email", "code", "os", "application", "fingerprint", "source"]
+			},
+			"ForgotPasswordRequest": {
+				"type": "object",
+				"properties": {
+					"email": { "type": "string", "format": "email" }
+				},
+				"required": ["email"]
+			},
+			"ResetPasswordRequest": {
+				"type": "object",
+				"properties": {
+					"email": { "type": "string", "format": "email" },
+					"code": { "type": "string" },
+					"newPassword": { "type": "string", "minLength": 8 }
+				},
+				"required": ["email", "code", "newPassword"]
+			},
+			"ResendEmailCodeRequest": {
+				"type": "object",
+				"properties": {
+					"email": { "type": "string", "format": "email" }
+				},
+				"required": ["email"]
+			},
+			"UpdateEmailRequest": {
+				"type": "object",
+				"properties": {
+					"newEmail": { "type": "string", "format": "email" }
+				},
+				"required": ["newEmail"]
+			},
+			"VerifyOldEmailRequest": {
+				"type": "object",
+				"properties": {
+					"code": { "type": "string" },
+					"newEmail": { "type": "string", "format": "email" }
+				},
+				"required": ["code", "newEmail"]
+			},
+			"VerifyNewEmailRequest": {
+				"type": "object",
+				"properties": {
+					"newEmail": { "type": "string", "format": "email" },
+					"code": { "type": "string" }
+				},
+				"required": ["newEmail", "code"]
+			},
+			"ProfileUpdateRequest": {
+				"type": "object",
+				"properties": {
+					"firstName": { "type": "string" },
+					"lastName": { "type": "string" },
+					"middleName": { "type": "string" },
+					"birthday": { "type": "string", "format": "date" },
+					"weight": { "type": "string" },
+					"height": { "type": "string" },
+					"goalWeight": { "type": "string" },
+					"shoulder": { "type": "string" },
+					"chest": { "type": "string" },
+					"waist": { "type": "string" },
+					"hips": { "type": "string" },
+					"gender": { "type": "string", "enum": ["male", "female"] },
+					"physicalActivity": { "type": "string" },
+					"activityDescription": { "type": "string" },
+					"foodIntolerances": { "type": "array", "items": { "type": "string" } },
+					"allergiesNotes": { "type": "string" },
+					"whereDoSports": { "type": "string" },
+					"alcoholConsumption": { "type": "string" },
+					"isGaveBirth": { "type": "boolean" },
+					"gaveBirth": { "type": "string", "format": "date" },
+					"breastFeeding": { "type": "boolean" }
+				}
 			}
 		},
 		"securitySchemes": {
