@@ -1745,6 +1745,392 @@
           }
         ]
       }
+    },
+    "/auth/verify-email": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Verify email with code",
+        "description": "Verify user email using the code sent via email",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email verified successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyEmailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or expired code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Verification code or user not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many attempts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/resend-email-code": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Resend email verification code",
+        "description": "Triggers sending a new verification code to the user's email",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendEmailCodeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verification code sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResendEmailCodeResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/forgot-password": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Request password reset",
+        "description": "Sends a password reset code to the specified email address",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Reset password with code",
+        "description": "Sets a new password using the reset code provided via email",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid code or expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many attempts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/change-password": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Change current password",
+        "description": "Sets a new password for the authenticated user by verifying the old password",
+        "security": [
+          {
+            "cookieAuth": [],
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password changed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid old password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wizard/step": {
+      "put": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Update wizard step data",
+        "description": "Updates the user's profile data during the onboarding wizard. Also syncs measurements to the measurements service.",
+        "security": [
+          {
+            "cookieAuth": [],
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WizardStepRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyEmailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/avatar": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Upload user avatar",
+        "description": "Uploads a new avatar image for the authenticated user",
+        "security": [
+          {
+            "cookieAuth": [],
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Avatar uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Delete user avatar",
+        "description": "Removes the avatar for the authenticated user",
+        "security": [
+          {
+            "cookieAuth": [],
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Avatar deleted successfully"
+          }
+        }
+      }
+    },
+    "/avatar/metadata": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Get avatar metadata",
+        "description": "Returns metadata about the authenticated user's avatar",
+        "security": [
+          {
+            "cookieAuth": [],
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserAvatarMetadataResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2612,469 +2998,733 @@
         "required": [
           "message",
           "binding"
-        ],
-        "UserResponse": {
-          "type": "object",
-          "properties": {
-            "id": {
-              "type": "string",
-              "format": "uuid",
-              "description": "User ID"
-            },
-            "username": {
-              "type": "string"
-            },
-            "email": {
-              "type": "string",
-              "format": "email"
-            },
-            "managerId": {
-              "type": "string",
-              "format": "uuid",
-              "nullable": true
-            },
-            "firstName": {
-              "type": "string"
-            },
-            "lastName": {
-              "type": "string",
-              "nullable": true
-            },
-            "roleName": {
-              "type": "string",
-              "description": "User role name"
-            },
-            "address": {
-              "type": "string",
-              "description": "Blockchain wallet address"
-            },
-            "checkedDate": {
-              "type": "string",
-              "format": "date-time"
-            },
-            "archived": {
-              "type": "boolean"
-            },
-            "physicalActivity": {
-              "type": "string",
-              "nullable": true
-            },
-            "foodIntolerances": {
-              "type": "string",
-              "nullable": true
-            },
-            "goalWeight": {
-              "type": "string",
-              "nullable": true
-            },
-            "whereDoSports": {
-              "type": "string",
-              "nullable": true
-            },
-            "isGaveBirth": {
-              "type": "boolean",
-              "nullable": true
-            },
-            "gaveBirth": {
-              "type": "string",
-              "format": "date",
-              "nullable": true
-            },
-            "breastFeeding": {
-              "type": "boolean",
-              "nullable": true
-            },
-            "alcoholConsumption": {
-              "type": "boolean",
-              "nullable": true
-            },
-            "contraindications": {
-              "type": "string",
-              "nullable": true
-            },
-            "eatingDisorder": {
-              "type": "string",
-              "nullable": true
-            },
-            "spineIssues": {
-              "type": "string",
-              "nullable": true
-            },
-            "endocrineDisorders": {
-              "type": "string",
-              "nullable": true
-            },
-            "gender": {
-              "type": "string",
-              "enum": [
-                "male",
-                "female"
-              ],
-              "nullable": true
-            },
-            "birthday": {
-              "type": "string",
-              "format": "date",
-              "nullable": true
-            },
-            "programDay": {
-              "type": "string",
-              "format": "date",
-              "nullable": true
-            },
-            "createdAt": {
-              "type": "string",
-              "format": "date-time"
-            },
-            "updatedAt": {
-              "type": "string",
-              "format": "date-time"
-            }
+        ]
+      },
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "User ID"
           },
-          "required": [
-            "id",
-            "username",
-            "email",
-            "firstName",
-            "roleName",
-            "address",
-            "checkedDate",
-            "archived",
-            "createdAt",
-            "updatedAt"
-          ]
-        },
-        "UsersRequest": {
-          "type": "object",
-          "properties": {
-            "offset": {
-              "type": "integer",
-              "default": 0,
-              "description": "Number of users to skip"
-            },
-            "limit": {
-              "type": "integer",
-              "default": 10,
-              "description": "Maximum number of users to return"
-            },
-            "search": {
-              "type": "string",
-              "description": "Search term to filter users by name or username"
-            },
-            "status": {
-              "type": "string",
-              "enum": [
-                "all",
-                "new",
-                "with balance",
-                "without balance"
-              ],
-              "default": "all",
-              "description": "Filter users by status"
-            },
-            "archived": {
-              "type": "boolean",
-              "default": false,
-              "description": "Filter users by archived status"
-            }
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "managerId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string",
+            "nullable": true
+          },
+          "roleName": {
+            "type": "string",
+            "description": "User role name"
+          },
+          "address": {
+            "type": "string",
+            "description": "Blockchain wallet address"
+          },
+          "checkedDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "archived": {
+            "type": "boolean"
+          },
+          "physicalActivity": {
+            "type": "string",
+            "nullable": true
+          },
+          "foodIntolerances": {
+            "type": "string",
+            "nullable": true
+          },
+          "goalWeight": {
+            "type": "string",
+            "nullable": true
+          },
+          "whereDoSports": {
+            "type": "string",
+            "nullable": true
+          },
+          "isGaveBirth": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "gaveBirth": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "breastFeeding": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "alcoholConsumption": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "contraindications": {
+            "type": "string",
+            "nullable": true
+          },
+          "eatingDisorder": {
+            "type": "string",
+            "nullable": true
+          },
+          "spineIssues": {
+            "type": "string",
+            "nullable": true
+          },
+          "endocrineDisorders": {
+            "type": "string",
+            "nullable": true
+          },
+          "gender": {
+            "type": "string",
+            "enum": [
+              "male",
+              "female"
+            ],
+            "nullable": true
+          },
+          "birthday": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "programDay": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         },
-        "SwitchUserRequest": {
-          "type": "object",
-          "properties": {
-            "id": {
-              "type": "string",
-              "format": "uuid",
-              "description": "Target user ID"
-            },
-            "usersRequest": {
-              "$ref": "#/components/schemas/UsersRequest"
-            },
-            "os": {
-              "type": "string",
-              "enum": [
-                "windows",
-                "linux",
-                "macos",
-                "android",
-                "ios",
-                "web"
-              ],
-              "example": "android"
-            },
-            "application": {
-              "type": "string",
-              "example": "Mindcrafted Mobile v1.0"
-            },
-            "fingerprint": {
-              "type": "string",
-              "example": "60c72b2f9b1e8b001c8e4d3a"
-            },
-            "source": {
-              "type": "string",
-              "example": "Google Pixel 9"
-            },
-            "refreshToken": {
-              "type": "string",
-              "example": "abcdef123456"
-            }
+        "required": [
+          "id",
+          "username",
+          "email",
+          "firstName",
+          "roleName",
+          "address",
+          "checkedDate",
+          "archived",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UsersRequest": {
+        "type": "object",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "default": 0,
+            "description": "Number of users to skip"
           },
-          "required": [
-            "id",
-            "os",
-            "application",
-            "fingerprint",
-            "source"
-          ]
-        },
-        "BalanceResponse": {
-          "type": "object",
-          "properties": {
-            "balance": {
-              "type": "number",
-              "description": "Current balance of the user"
-            }
+          "limit": {
+            "type": "integer",
+            "default": 10,
+            "description": "Maximum number of users to return"
           },
-          "required": [
-            "balance"
-          ]
-        },
-        "GetUsersByAddressesRequest": {
-          "type": "object",
-          "required": [
-            "addresses"
-          ],
-          "properties": {
-            "addresses": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "minItems": 1,
-              "description": "Array of wallet addresses to search for. Must contain at least one address.",
-              "example": [
-                "0x6294C7251D145bbe9B2f529FdD6D5D42E1d0DeA4",
-                "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0"
-              ]
-            }
+          "search": {
+            "type": "string",
+            "description": "Search term to filter users by name or username"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "all",
+              "new",
+              "with balance",
+              "without balance"
+            ],
+            "default": "all",
+            "description": "Filter users by status"
+          },
+          "archived": {
+            "type": "boolean",
+            "default": false,
+            "description": "Filter users by archived status"
           }
-        },
-        "ErrorResponse": {
-          "type": "object",
-          "properties": {
-            "message": {
-              "type": "string",
-              "example": "Error message"
-            }
-          }
-        },
-        "ValidationErrorResponse": {
-          "type": "object",
-          "properties": {
-            "status": {
-              "type": "integer",
-              "example": 400
-            },
-            "statusMessage": {
-              "type": "string",
-              "example": "Validation Error"
-            },
-            "message": {
-              "type": "string",
-              "example": "Validation Error"
-            },
-            "data": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "code": {
-                    "type": "string"
-                  },
-                  "path": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "message": {
-                    "type": "string"
-                  }
-                }
-              },
-              "description": "Detailed validation issues from Zod"
-            }
-          }
-        },
-        "LogoutResponse": {
-          "type": "object",
-          "properties": {
-            "message": {
-              "type": "string",
-              "example": "User logged out successfully"
-            }
-          }
-        },
-        "TokensResponse": {
-          "type": "object",
-          "properties": {
-            "accessToken": {
-              "type": "string"
-            },
-            "refreshToken": {
-              "type": "string"
-            },
-            "user": {
-              "$ref": "#/components/schemas/UserResponse"
-            }
-          },
-          "required": [
-            "accessToken",
-            "refreshToken",
-            "user"
-          ]
-        },
-        "SwitchResponse": {
-          "type": "object",
-          "properties": {
-            "accessToken": {
-              "type": "string"
-            },
-            "refreshToken": {
-              "type": "string"
-            },
-            "status": {
-              "type": "string",
-              "enum": [
-                "success",
-                "return"
-              ],
-              "description": "Status of the switch operation"
-            },
-            "user": {
-              "$ref": "#/components/schemas/UserResponse"
-            },
-            "usersRequest": {
-              "$ref": "#/components/schemas/UsersRequest"
-            }
-          },
-          "required": [
-            "accessToken",
-            "refreshToken",
-            "status",
-            "user",
-            "usersRequest"
-          ]
-        },
-        "LogoutRequest": {
-          "type": "object",
-          "properties": {
-            "fingerprint": {
-              "type": "string",
-              "example": "60c72b2f9b1e8b001c8e4d3a"
-            },
-            "refreshToken": {
-              "type": "string",
-              "example": "abcdef123456"
-            }
-          },
-          "required": [
-            "fingerprint"
-          ]
-        },
-        "RefreshRequest": {
-          "type": "object",
-          "properties": {
-            "os": {
-              "type": "string",
-              "enum": [
-                "windows",
-                "linux",
-                "macos",
-                "android",
-                "ios",
-                "web"
-              ],
-              "example": "android"
-            },
-            "application": {
-              "type": "string",
-              "example": "Mindcrafted Mobile v1.0"
-            },
-            "fingerprint": {
-              "type": "string",
-              "example": "60c72b2f9b1e8b001c8e4d3a"
-            },
-            "source": {
-              "type": "string",
-              "example": "Google Pixel 9"
-            },
-            "refreshToken": {
-              "type": "string",
-              "example": "abcdef123456"
-            }
-          },
-          "required": [
-            "os",
-            "application",
-            "fingerprint",
-            "source"
-          ]
-        },
-        "SwitchIterationRequest": {
-          "type": "object",
-          "properties": {
-            "os": {
-              "type": "string",
-              "enum": [
-                "windows",
-                "linux",
-                "macos",
-                "android",
-                "ios",
-                "web"
-              ],
-              "example": "android"
-            },
-            "application": {
-              "type": "string",
-              "example": "Mindcrafted Mobile v1.0"
-            },
-            "fingerprint": {
-              "type": "string",
-              "example": "60c72b2f9b1e8b001c8e4d3a"
-            },
-            "source": {
-              "type": "string",
-              "example": "Google Pixel 9"
-            },
-            "refreshToken": {
-              "type": "string",
-              "example": "abcdef123456"
-            }
-          },
-          "required": [
-            "os",
-            "application",
-            "fingerprint",
-            "source"
-          ]
         }
       },
-      "securitySchemes": {
-        "cookieAuth": {
-          "type": "apiKey",
-          "in": "cookie",
-          "name": "accessToken",
-          "description": "Access token stored in cookie (checked first)"
+      "SwitchUserRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Target user ID"
+          },
+          "usersRequest": {
+            "$ref": "#/components/schemas/UsersRequest"
+          },
+          "os": {
+            "type": "string",
+            "enum": [
+              "windows",
+              "linux",
+              "macos",
+              "android",
+              "ios",
+              "web"
+            ],
+            "example": "android"
+          },
+          "application": {
+            "type": "string",
+            "example": "Mindcrafted Mobile v1.0"
+          },
+          "fingerprint": {
+            "type": "string",
+            "example": "60c72b2f9b1e8b001c8e4d3a"
+          },
+          "source": {
+            "type": "string",
+            "example": "Google Pixel 9"
+          },
+          "refreshToken": {
+            "type": "string",
+            "example": "abcdef123456"
+          }
         },
-        "bearerAuth": {
-          "type": "http",
-          "scheme": "bearer",
-          "bearerFormat": "JWT",
-          "description": "Access token in Authorization header (fallback if cookie not present)"
+        "required": [
+          "id",
+          "os",
+          "application",
+          "fingerprint",
+          "source"
+        ]
+      },
+      "BalanceResponse": {
+        "type": "object",
+        "properties": {
+          "balance": {
+            "type": "number",
+            "description": "Current balance of the user"
+          }
+        },
+        "required": [
+          "balance"
+        ]
+      },
+      "GetUsersByAddressesRequest": {
+        "type": "object",
+        "required": [
+          "addresses"
+        ],
+        "properties": {
+          "addresses": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "description": "Array of wallet addresses to search for. Must contain at least one address.",
+            "example": [
+              "0x6294C7251D145bbe9B2f529FdD6D5D42E1d0DeA4",
+              "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0"
+            ]
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Error message"
+          }
+        }
+      },
+      "ValidationErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "example": 400
+          },
+          "statusMessage": {
+            "type": "string",
+            "example": "Validation Error"
+          },
+          "message": {
+            "type": "string",
+            "example": "Validation Error"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Detailed validation issues from Zod"
+          }
+        }
+      },
+      "LogoutResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "User logged out successfully"
+          }
+        }
+      },
+      "TokensResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserResponse"
+          }
+        },
+        "required": [
+          "accessToken",
+          "refreshToken",
+          "user"
+        ]
+      },
+      "SwitchResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "success",
+              "return"
+            ],
+            "description": "Status of the switch operation"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserResponse"
+          },
+          "usersRequest": {
+            "$ref": "#/components/schemas/UsersRequest"
+          }
+        },
+        "required": [
+          "accessToken",
+          "refreshToken",
+          "status",
+          "user",
+          "usersRequest"
+        ]
+      },
+      "LogoutRequest": {
+        "type": "object",
+        "properties": {
+          "fingerprint": {
+            "type": "string",
+            "example": "60c72b2f9b1e8b001c8e4d3a"
+          },
+          "refreshToken": {
+            "type": "string",
+            "example": "abcdef123456"
+          }
+        },
+        "required": [
+          "fingerprint"
+        ]
+      },
+      "RefreshRequest": {
+        "type": "object",
+        "properties": {
+          "os": {
+            "type": "string",
+            "enum": [
+              "windows",
+              "linux",
+              "macos",
+              "android",
+              "ios",
+              "web"
+            ],
+            "example": "android"
+          },
+          "application": {
+            "type": "string",
+            "example": "Mindcrafted Mobile v1.0"
+          },
+          "fingerprint": {
+            "type": "string",
+            "example": "60c72b2f9b1e8b001c8e4d3a"
+          },
+          "source": {
+            "type": "string",
+            "example": "Google Pixel 9"
+          },
+          "refreshToken": {
+            "type": "string",
+            "example": "abcdef123456"
+          }
+        },
+        "required": [
+          "os",
+          "application",
+          "fingerprint",
+          "source"
+        ]
+      },
+      "SwitchIterationRequest": {
+        "type": "object",
+        "properties": {
+          "os": {
+            "type": "string",
+            "enum": [
+              "windows",
+              "linux",
+              "macos",
+              "android",
+              "ios",
+              "web"
+            ],
+            "example": "android"
+          },
+          "application": {
+            "type": "string",
+            "example": "Mindcrafted Mobile v1.0"
+          },
+          "fingerprint": {
+            "type": "string",
+            "example": "60c72b2f9b1e8b001c8e4d3a"
+          },
+          "source": {
+            "type": "string",
+            "example": "Google Pixel 9"
+          },
+          "refreshToken": {
+            "type": "string",
+            "example": "abcdef123456"
+          }
+        },
+        "required": [
+          "os",
+          "application",
+          "fingerprint",
+          "source"
+        ]
+      },
+      "VerifyEmailRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "code": {
+          "type": "string"
+        },
+        "os": {
+          "type": "string",
+          "enum": [
+            "windows",
+            "linux",
+            "macos",
+            "android",
+            "ios",
+            "web"
+          ]
+        },
+        "application": {
+          "type": "string"
+        },
+        "fingerprint": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "email",
+        "code",
+        "os",
+        "application",
+        "fingerprint",
+        "source"
+      ]
+    },
+    "VerifyEmailResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "accessToken": {
+          "type": "string"
+        },
+        "refreshToken": {
+          "type": "string"
+        },
+        "user": {
+          "$ref": "#/components/schemas/UserResponse"
+        }
+      },
+      "required": [
+        "message",
+        "accessToken",
+        "refreshToken",
+        "user"
+      ]
+    },
+    "ResendEmailCodeRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email"
+        }
+      },
+      "required": [
+        "email"
+      ]
+    },
+    "ResendEmailCodeResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "message",
+        "email"
+      ]
+    },
+    "ForgotPasswordRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email"
+        }
+      },
+      "required": [
+        "email"
+      ]
+    },
+    "ResetPasswordRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "code": {
+          "type": "string"
+        },
+        "newPassword": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "email",
+        "code",
+        "newPassword"
+      ]
+    },
+    "ChangePasswordRequest": {
+      "type": "object",
+      "properties": {
+        "oldPassword": {
+          "type": "string"
+        },
+        "newPassword": {
+          "type": "string",
+          "minLength": 8
+        }
+      },
+      "required": [
+        "oldPassword",
+        "newPassword"
+      ]
+    },
+    "LogoutRequest": {
+      "type": "object",
+      "properties": {
+        "fingerprint": {
+          "type": "string"
+        },
+        "refreshToken": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "fingerprint"
+      ]
+    },
+    "LogoutResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ]
+    },
+    "WizardStepRequest": {
+      "type": "object",
+      "properties": {
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
+          "type": "string"
+        },
+        "birthday": {
+          "type": "string"
+        },
+        "gender": {
+          "type": "string",
+          "enum": [
+            "male",
+            "female"
+          ]
+        },
+        "physicalActivity": {
+          "type": "string"
+        },
+        "activityDescription": {
+          "type": "string"
+        },
+        "foodIntolerances": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allergiesNotes": {
+          "type": "string"
+        },
+        "goalWeight": {
+          "type": "string"
+        },
+        "whereDoSports": {
+          "type": "string"
+        },
+        "alcoholConsumption": {
+          "type": "string"
+        },
+        "isGaveBirth": {
+          "type": "boolean"
+        },
+        "gaveBirth": {
+          "type": "string"
+        },
+        "breastFeeding": {
+          "type": "boolean"
+        },
+        "weight": {
+          "type": "string"
+        },
+        "height": {
+          "type": "string"
+        },
+        "shoulder": {
+          "type": "string"
+        },
+        "chest": {
+          "type": "string"
+        },
+        "waist": {
+          "type": "string"
+        },
+        "hips": {
+          "type": "string"
+        }
+      }
+    },
+    "UserAvatarMetadataResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "userId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string"
+        },
+        "size": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     }
+  },
+  "securitySchemes": {
+    "cookieAuth": {
+      "type": "apiKey",
+      "in": "cookie",
+      "name": "accessToken",
+      "description": "Access token stored in cookie (checked first)"
+    },
+    "bearerAuth": {
+      "type": "http",
+      "scheme": "bearer",
+      "bearerFormat": "JWT",
+      "description": "Access token in Authorization header (fallback if cookie not present)"
+    }
   }
-}
+}}
