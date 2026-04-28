@@ -426,6 +426,447 @@
           }
         }
       }
+    },
+    "/health_activity/history": {
+      "get": {
+        "summary": "Get health activity history",
+        "description": "Retrieve daily health activities (steps, calories, etc.) for a specific date range",
+        "tags": [
+          "Health Activity"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": true,
+            "description": "Start date for history (YYYY-MM-DD)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": true,
+            "description": "End date for history (YYYY-MM-DD)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "History retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "records": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/HealthActivityRecord"
+                          }
+                        },
+                        "startDate": { "type": "string" },
+                        "endDate": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health_activity/stats": {
+      "get": {
+        "summary": "Get health activity statistics",
+        "description": "Retrieve aggregated health activity statistics for a given period",
+        "tags": [
+          "Health Activity"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["day", "week", "month", "year"],
+              "default": "week"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Statistics retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "period": { "type": "string" },
+                        "average": { "type": "integer" },
+                        "total": { "type": "integer" },
+                        "target": { "type": "integer" },
+                        "bestDay": { "$ref": "#/components/schemas/HealthActivityRecord" },
+                        "currentStreak": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health_activity/sync": {
+      "post": {
+        "summary": "Sync health activity data",
+        "description": "Sync multiple health activity records from a mobile source (HealthKit/Health Connect)",
+        "tags": [
+          "Health Activity"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "records": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/HealthActivitySyncInput"
+                    }
+                  }
+                },
+                "required": ["records"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Data synced successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "synced": { "type": "integer" },
+                    "failed": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health_activity/target": {
+      "get": {
+        "summary": "Get health target",
+        "description": "Retrieve the current daily steps target for the user",
+        "tags": [
+          "Health Activity"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Target retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "target": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update health target",
+        "description": "Update the daily steps target for the user",
+        "tags": [
+          "Health Activity"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "target": { "type": "integer", "minimum": 1 }
+                },
+                "required": ["target"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Target updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "target": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workouts": {
+      "get": {
+        "summary": "Get workouts",
+        "description": "Retrieve workouts for the authenticated user",
+        "tags": [
+          "Workouts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "desc"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workouts retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Workout"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a workout",
+        "description": "Log a new workout record",
+        "tags": [
+          "Workouts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkoutInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Workout created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Workout"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workouts/{id}": {
+      "put": {
+        "summary": "Update a workout",
+        "description": "Update an existing workout record",
+        "tags": [
+          "Workouts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkoutUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Workout updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Workout"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a workout",
+        "description": "Remove a workout record",
+        "tags": [
+          "Workouts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workout deleted successfully"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -666,6 +1107,64 @@
             }
           }
         }
+      },
+      "HealthActivityRecord": {
+        "type": "object",
+        "properties": {
+          "date": { "type": "string", "example": "2024-03-28" },
+          "steps": { "type": "integer", "example": 10000 },
+          "distance": { "type": "number", "example": 7.5 },
+          "calories": { "type": "number", "example": 350 },
+          "heartRate": { "type": "number", "example": 75 },
+          "source": { "type": "string", "example": "healthkit" }
+        },
+        "required": ["date", "steps", "distance", "calories", "heartRate", "source"]
+      },
+      "HealthActivitySyncInput": {
+        "type": "object",
+        "properties": {
+          "date": { "type": "string" },
+          "steps": { "type": "integer", "minimum": 0, "default": 0 },
+          "distance": { "type": "number", "minimum": 0, "default": 0 },
+          "calories": { "type": "number", "minimum": 0, "default": 0 },
+          "heartRate": { "type": "number", "minimum": 0, "default": 0 },
+          "source": { "type": "string", "enum": ["healthkit", "health_connect", "manual", "mock"] }
+        },
+        "required": ["date", "source"]
+      },
+      "Workout": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "userId": { "type": "string", "format": "uuid" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "type": { "$ref": "#/components/schemas/WorkoutType" },
+          "data": { "type": "object", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["id", "userId", "timestamp", "type"]
+      },
+      "WorkoutInput": {
+        "type": "object",
+        "properties": {
+          "timestamp": { "type": "string", "format": "date-time" },
+          "type": { "$ref": "#/components/schemas/WorkoutType" },
+          "data": { "type": "object", "nullable": true }
+        },
+        "required": ["type"]
+      },
+      "WorkoutUpdate": {
+        "type": "object",
+        "properties": {
+          "timestamp": { "type": "string", "format": "date-time" },
+          "type": { "$ref": "#/components/schemas/WorkoutType" },
+          "data": { "type": "object", "nullable": true }
+        }
+      },
+      "WorkoutType": {
+        "type": "string",
+        "enum": ["home", "gym", "activity"]
       }
     }
   },
@@ -677,6 +1176,14 @@
     {
       "name": "Measurements",
       "description": "Body measurement management endpoints"
+    },
+    {
+      "name": "Health Activity",
+      "description": "Endpoints for syncing and retrieving daily health activities (steps, calories, etc.)"
+    },
+    {
+      "name": "Workouts",
+      "description": "Workout logging and management endpoints"
     }
   ]
 }
