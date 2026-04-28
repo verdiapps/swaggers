@@ -2131,6 +2131,288 @@
           }
         }
       }
+    },
+    "/sessions": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Get active sessions",
+        "description": "Returns a list of all active refresh tokens for the current user",
+        "security": [
+          {
+            "cookieAuth": [],
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SessionResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Delete all sessions",
+        "description": "Removes all refresh tokens for the current user except the current one",
+        "security": [
+          {
+            "cookieAuth": [],
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sessions deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{id}": {
+      "delete": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Delete a specific session",
+        "description": "Removes a specific refresh token by ID",
+        "security": [
+          {
+            "cookieAuth": [],
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "tags": [
+          "User Management"
+        ],
+        "summary": "Get users",
+        "description": "Returns a list of users with optional filtering",
+        "security": [
+          {
+            "cookieAuth": [],
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/me": {
+      "delete": {
+        "tags": [
+          "User Management"
+        ],
+        "summary": "Delete my account",
+        "description": "Deletes the currently authenticated user's account",
+        "security": [
+          {
+            "cookieAuth": [],
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Account deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/me/manager": {
+      "get": {
+        "tags": [
+          "User Management"
+        ],
+        "summary": "Get my manager",
+        "description": "Returns the manager of the authenticated user",
+        "security": [
+          {
+            "cookieAuth": [],
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/managed": {
+      "get": {
+        "tags": [
+          "User Management"
+        ],
+        "summary": "Get managed users",
+        "description": "Returns users managed by the authenticated user",
+        "security": [
+          {
+            "cookieAuth": [],
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/avatar/{id}": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Get avatar by ID",
+        "description": "Returns the avatar image for a specific user ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "image/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/avatar/{id}/metadata": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Get avatar metadata by ID",
+        "description": "Returns metadata about the avatar of a specific user ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserAvatarMetadataResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3297,10 +3579,12 @@
         "type": "object",
         "properties": {
           "message": {
-            "type": "string",
-            "example": "User logged out successfully"
+            "type": "string"
           }
-        }
+        },
+        "required": [
+          "message"
+        ]
       },
       "TokensResponse": {
         "type": "object",
@@ -3357,12 +3641,10 @@
         "type": "object",
         "properties": {
           "fingerprint": {
-            "type": "string",
-            "example": "60c72b2f9b1e8b001c8e4d3a"
+            "type": "string"
           },
           "refreshToken": {
-            "type": "string",
-            "example": "abcdef123456"
+            "type": "string"
           }
         },
         "required": [
@@ -3448,283 +3730,282 @@
         ]
       },
       "VerifyEmailRequest": {
-      "type": "object",
-      "properties": {
-        "email": {
-          "type": "string",
-          "format": "email"
-        },
-        "code": {
-          "type": "string"
-        },
-        "os": {
-          "type": "string",
-          "enum": [
-            "windows",
-            "linux",
-            "macos",
-            "android",
-            "ios",
-            "web"
-          ]
-        },
-        "application": {
-          "type": "string"
-        },
-        "fingerprint": {
-          "type": "string"
-        },
-        "source": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "email",
-        "code",
-        "os",
-        "application",
-        "fingerprint",
-        "source"
-      ]
-    },
-    "VerifyEmailResponse": {
-      "type": "object",
-      "properties": {
-        "message": {
-          "type": "string"
-        },
-        "accessToken": {
-          "type": "string"
-        },
-        "refreshToken": {
-          "type": "string"
-        },
-        "user": {
-          "$ref": "#/components/schemas/UserResponse"
-        }
-      },
-      "required": [
-        "message",
-        "accessToken",
-        "refreshToken",
-        "user"
-      ]
-    },
-    "ResendEmailCodeRequest": {
-      "type": "object",
-      "properties": {
-        "email": {
-          "type": "string",
-          "format": "email"
-        }
-      },
-      "required": [
-        "email"
-      ]
-    },
-    "ResendEmailCodeResponse": {
-      "type": "object",
-      "properties": {
-        "message": {
-          "type": "string"
-        },
-        "email": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "message",
-        "email"
-      ]
-    },
-    "ForgotPasswordRequest": {
-      "type": "object",
-      "properties": {
-        "email": {
-          "type": "string",
-          "format": "email"
-        }
-      },
-      "required": [
-        "email"
-      ]
-    },
-    "ResetPasswordRequest": {
-      "type": "object",
-      "properties": {
-        "email": {
-          "type": "string",
-          "format": "email"
-        },
-        "code": {
-          "type": "string"
-        },
-        "newPassword": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "email",
-        "code",
-        "newPassword"
-      ]
-    },
-    "ChangePasswordRequest": {
-      "type": "object",
-      "properties": {
-        "oldPassword": {
-          "type": "string"
-        },
-        "newPassword": {
-          "type": "string",
-          "minLength": 8
-        }
-      },
-      "required": [
-        "oldPassword",
-        "newPassword"
-      ]
-    },
-    "LogoutRequest": {
-      "type": "object",
-      "properties": {
-        "fingerprint": {
-          "type": "string"
-        },
-        "refreshToken": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "fingerprint"
-      ]
-    },
-    "LogoutResponse": {
-      "type": "object",
-      "properties": {
-        "message": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "message"
-      ]
-    },
-    "WizardStepRequest": {
-      "type": "object",
-      "properties": {
-        "firstName": {
-          "type": "string"
-        },
-        "lastName": {
-          "type": "string"
-        },
-        "birthday": {
-          "type": "string"
-        },
-        "gender": {
-          "type": "string",
-          "enum": [
-            "male",
-            "female"
-          ]
-        },
-        "physicalActivity": {
-          "type": "string"
-        },
-        "activityDescription": {
-          "type": "string"
-        },
-        "foodIntolerances": {
-          "type": "array",
-          "items": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "code": {
+            "type": "string"
+          },
+          "os": {
+            "type": "string",
+            "enum": [
+              "windows",
+              "linux",
+              "macos",
+              "android",
+              "ios",
+              "web"
+            ]
+          },
+          "application": {
+            "type": "string"
+          },
+          "fingerprint": {
+            "type": "string"
+          },
+          "source": {
             "type": "string"
           }
         },
-        "allergiesNotes": {
-          "type": "string"
+        "required": [
+          "email",
+          "code",
+          "os",
+          "application",
+          "fingerprint",
+          "source"
+        ]
+      },
+      "VerifyEmailResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserResponse"
+          }
         },
-        "goalWeight": {
-          "type": "string"
+        "required": [
+          "message",
+          "accessToken",
+          "refreshToken",
+          "user"
+        ]
+      },
+      "ResendEmailCodeRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          }
         },
-        "whereDoSports": {
-          "type": "string"
+        "required": [
+          "email"
+        ]
+      },
+      "ResendEmailCodeResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
         },
-        "alcoholConsumption": {
-          "type": "string"
+        "required": [
+          "message",
+          "email"
+        ]
+      },
+      "ForgotPasswordRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          }
         },
-        "isGaveBirth": {
-          "type": "boolean"
+        "required": [
+          "email"
+        ]
+      },
+      "ResetPasswordRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "code": {
+            "type": "string"
+          },
+          "newPassword": {
+            "type": "string"
+          }
         },
-        "gaveBirth": {
-          "type": "string"
+        "required": [
+          "email",
+          "code",
+          "newPassword"
+        ]
+      },
+      "ChangePasswordRequest": {
+        "type": "object",
+        "properties": {
+          "oldPassword": {
+            "type": "string"
+          },
+          "newPassword": {
+            "type": "string",
+            "minLength": 8
+          }
         },
-        "breastFeeding": {
-          "type": "boolean"
-        },
-        "weight": {
-          "type": "string"
-        },
-        "height": {
-          "type": "string"
-        },
-        "shoulder": {
-          "type": "string"
-        },
-        "chest": {
-          "type": "string"
-        },
-        "waist": {
-          "type": "string"
-        },
-        "hips": {
-          "type": "string"
+        "required": [
+          "oldPassword",
+          "newPassword"
+        ]
+      },
+      "WizardStepRequest": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "birthday": {
+            "type": "string"
+          },
+          "gender": {
+            "type": "string",
+            "enum": [
+              "male",
+              "female"
+            ]
+          },
+          "physicalActivity": {
+            "type": "string"
+          },
+          "activityDescription": {
+            "type": "string"
+          },
+          "foodIntolerances": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allergiesNotes": {
+            "type": "string"
+          },
+          "goalWeight": {
+            "type": "string"
+          },
+          "whereDoSports": {
+            "type": "string"
+          },
+          "alcoholConsumption": {
+            "type": "string"
+          },
+          "isGaveBirth": {
+            "type": "boolean"
+          },
+          "gaveBirth": {
+            "type": "string"
+          },
+          "breastFeeding": {
+            "type": "boolean"
+          },
+          "weight": {
+            "type": "string"
+          },
+          "height": {
+            "type": "string"
+          },
+          "shoulder": {
+            "type": "string"
+          },
+          "chest": {
+            "type": "string"
+          },
+          "waist": {
+            "type": "string"
+          },
+          "hips": {
+            "type": "string"
+          }
         }
+      },
+      "UserAvatarMetadataResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "hash": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string"
+          },
+          "size": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SessionResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "deviceName": { "type": "string" },
+          "deviceType": { "type": "string", "enum": ["mobile", "desktop"] },
+          "appName": { "type": "string" },
+          "appVersion": { "type": "string" },
+          "location": { "type": "string" },
+          "ip": { "type": "string" },
+          "lastActive": { "type": "string", "format": "date-time" },
+          "isCurrent": { "type": "boolean" },
+          "systemVersion": { "type": "string" }
+        },
+        "required": ["id", "deviceName", "deviceType", "lastActive", "isCurrent"]
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true }
+        },
+        "required": ["success"]
       }
     },
-    "UserAvatarMetadataResponse": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "format": "uuid"
-        },
-        "userId": {
-          "type": "string",
-          "format": "uuid"
-        },
-        "hash": {
-          "type": "string"
-        },
-        "format": {
-          "type": "string"
-        },
-        "size": {
-          "type": "number"
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time"
-        }
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "accessToken",
+        "description": "Access token stored in cookie (checked first)"
+      },
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Access token in Authorization header (fallback if cookie not present)"
       }
-    }
-  },
-  "securitySchemes": {
-    "cookieAuth": {
-      "type": "apiKey",
-      "in": "cookie",
-      "name": "accessToken",
-      "description": "Access token stored in cookie (checked first)"
-    },
-    "bearerAuth": {
-      "type": "http",
-      "scheme": "bearer",
-      "bearerFormat": "JWT",
-      "description": "Access token in Authorization header (fallback if cookie not present)"
     }
   }
-}}
+}
