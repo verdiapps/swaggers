@@ -2149,7 +2149,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
+                  "$ref": "#/components/schemas/UserAvatarMetadataResponse"
                 }
               }
             }
@@ -2170,7 +2170,23 @@
         ],
         "responses": {
           "200": {
-            "description": "Avatar deleted successfully"
+            "description": "Avatar deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Avatar deleted successfully"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -2314,7 +2330,16 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Account deleted successfully"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ]
                 }
               }
             }
@@ -2341,7 +2366,22 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
+                  "type": "object",
+                  "properties": {
+                    "manager": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/components/schemas/UserResponse"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "manager"
+                  ]
                 }
               }
             }
@@ -2794,6 +2834,10 @@
           },
           "emailVerified": {
             "type": "boolean"
+          },
+          "fullName": {
+            "type": "string",
+            "nullable": true
           },
           "createdAt": {
             "type": "string",
@@ -3327,6 +3371,9 @@
             "type": "string",
             "format": "email"
           },
+          "emailVerified": {
+            "type": "boolean"
+          },
           "managerId": {
             "type": "string",
             "format": "uuid",
@@ -3358,7 +3405,15 @@
             "type": "string",
             "nullable": true
           },
+          "activityDescription": {
+            "type": "string",
+            "nullable": true
+          },
           "foodIntolerances": {
+            "type": "string",
+            "nullable": true
+          },
+          "allergiesNotes": {
             "type": "string",
             "nullable": true
           },
@@ -3384,7 +3439,7 @@
             "nullable": true
           },
           "alcoholConsumption": {
-            "type": "boolean",
+            "type": "string",
             "nullable": true
           },
           "contraindications": {
@@ -3420,6 +3475,19 @@
             "type": "string",
             "format": "date",
             "nullable": true
+          },
+          "isDeleted": {
+            "type": "boolean"
+          },
+          "avatar": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserAvatarMetadataResponse"
+              },
+              {
+                "type": "null"  
+              }
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -3980,14 +4048,31 @@
             "type": "string",
             "format": "uuid"
           },
-          "hash": {
+          "baseName": {
             "type": "string"
           },
-          "format": {
+          "fileExtension": {
+            "type": "string",
+            "nullable": true
+          },
+          "mimeType": {
             "type": "string"
           },
-          "size": {
-            "type": "number"
+          "originalFileExtension": {
+            "type": "string",
+            "nullable": true
+          },
+          "originalMimeType": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "thumbHash": {
+            "type": "string"
           },
           "createdAt": {
             "type": "string",
@@ -3997,7 +4082,19 @@
             "type": "string",
             "format": "date-time"
           }
-        }
+        },
+        "required": [
+          "id",
+          "userId",
+          "baseName",
+          "mimeType",
+          "originalMimeType",
+          "width",
+          "height",
+          "thumbHash",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "SessionResponse": {
         "type": "object",
