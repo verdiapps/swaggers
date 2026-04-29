@@ -1296,7 +1296,7 @@
           "User Management"
         ],
         "summary": "List users with optional search and pagination",
-        "description": "Retrieves a list of users. Requires admin privileges. Supports pagination and search by first or last name.",
+        "description": "Retrieves a list of users. Requires 'get-all-users' permission. Supports pagination and search by first or last name.",
         "operationId": "listUsers",
         "parameters": [
           {
@@ -1417,6 +1417,76 @@
         "security": [
           {
             "cookieAuth": []
+          }
+        ]
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "tags": [
+          "User Management"
+        ],
+        "summary": "Get user by ID",
+        "description": "Retrieves a single user by their ID. Requires 'get-all-users' or 'get-managed-users' permission (if requester is the user's manager). Users can also fetch themselves.",
+        "operationId": "getUserById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The unique identifier of the user",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Missing or invalid authentication token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions or user deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": [],
+            "bearerAuth": []
           }
         ]
       }
