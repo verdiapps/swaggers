@@ -199,7 +199,9 @@
                 "hips",
                 "chest",
                 "steps",
-                "height"
+                "height",
+                "arm",
+                "thigh"
               ]
             }
           },
@@ -280,7 +282,7 @@
     "/measurement/{id}": {
       "get": {
         "summary": "Get a specific measurement by ID",
-        "description": "Retrieve a single measurement by its ID. Users can only access their own measurements unless they have 'get-all-measurements' permission.",
+        "description": "Retrieve a single measurement by its ID. Users can only access their own measurements.",
         "tags": [
           "Measurements"
         ],
@@ -488,6 +490,26 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -540,6 +562,26 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -596,6 +638,26 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -631,6 +693,16 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -681,6 +753,26 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -746,6 +838,26 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       },
@@ -780,6 +892,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Workout"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -833,6 +965,36 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Workout not found or not authorized to update",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       },
@@ -864,6 +1026,26 @@
         "responses": {
           "200": {
             "description": "Workout deleted successfully"
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Workout not found or not authorized to delete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -940,7 +1122,9 @@
               "hips",
               "chest",
               "steps",
-              "height"
+              "height",
+              "arm",
+              "thigh"
             ],
             "description": "Type of measurement"
           },
@@ -973,7 +1157,9 @@
               "hips",
               "chest",
               "steps",
-              "height"
+              "height",
+              "arm",
+              "thigh"
             ],
             "description": "Type of measurement"
           },
@@ -1013,7 +1199,9 @@
               "hips",
               "chest",
               "steps",
-              "height"
+              "height",
+              "arm",
+              "thigh"
             ],
             "description": "Type of measurement"
           },
@@ -1139,7 +1327,7 @@
           "userId": { "type": "string", "format": "uuid" },
           "timestamp": { "type": "string", "format": "date-time" },
           "type": { "$ref": "#/components/schemas/WorkoutType" },
-          "data": { "type": "object", "nullable": true },
+          "data": { "type": "object", "nullable": true, "additionalProperties": true },
           "createdAt": { "type": "string", "format": "date-time" },
           "updatedAt": { "type": "string", "format": "date-time" }
         },
@@ -1150,7 +1338,7 @@
         "properties": {
           "timestamp": { "type": "string", "format": "date-time" },
           "type": { "$ref": "#/components/schemas/WorkoutType" },
-          "data": { "type": "object", "nullable": true }
+          "data": { "type": "object", "nullable": true, "additionalProperties": true }
         },
         "required": ["type"]
       },
@@ -1159,7 +1347,7 @@
         "properties": {
           "timestamp": { "type": "string", "format": "date-time" },
           "type": { "$ref": "#/components/schemas/WorkoutType" },
-          "data": { "type": "object", "nullable": true }
+          "data": { "type": "object", "nullable": true, "additionalProperties": true }
         }
       },
       "WorkoutType": {
