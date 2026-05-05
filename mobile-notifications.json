@@ -113,40 +113,6 @@
 					}
 				}
 			}
-		},
-		"/email/verification/enqueue": {
-			"post": {
-				"summary": "Enqueue email verification",
-				"requestBody": {
-					"content": {
-						"application/json": {
-							"schema": {
-								"type": "object",
-								"properties": {
-									"email": { "type": "string", "format": "email" },
-									"code": { "type": "string" },
-									"userId": { "type": "string", "format": "uuid" },
-									"locale": { "type": "string" }
-								},
-								"required": ["email", "code"]
-							}
-						}
-					}
-				},
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": { "success": { "type": "boolean" } }
-								}
-							}
-						}
-					}
-				}
-			}
 		}
 	}
 }
