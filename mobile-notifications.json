@@ -1,0 +1,118 @@
+{
+	"openapi": "3.0.0",
+	"info": {
+		"title": "Mobile Notifications Service",
+		"version": "1.0.0"
+	},
+	"paths": {
+		"/tokens/register": {
+			"post": {
+				"summary": "Register push token",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"userId": { "type": "string", "format": "uuid" },
+									"token": { "type": "string" },
+									"deviceInfo": { "type": "string" },
+									"platform": { "type": "string" }
+								},
+								"required": ["userId", "token"]
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": { "success": { "type": "boolean" } }
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/tokens/{userId}": {
+			"get": {
+				"summary": "Get tokens for user",
+				"parameters": [
+					{
+						"name": "userId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string", "format": "uuid" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"properties": {
+											"id": { "type": "string", "format": "uuid" },
+											"userId": { "type": "string", "format": "uuid" },
+											"token": { "type": "string" },
+											"deviceInfo": { "type": "string" },
+											"platform": { "type": "string" },
+											"createdAt": { "type": "string", "format": "date-time" },
+											"updatedAt": { "type": "string", "format": "date-time" }
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/notify/enqueue": {
+			"post": {
+				"summary": "Enqueue notification",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"userId": { "type": "string", "format": "uuid" },
+									"title": { "type": "string" },
+									"body": { "type": "string" },
+									"type": { "type": "string" },
+									"data": { "type": "object" }
+								},
+								"required": ["userId", "title", "body", "type"]
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"success": { "type": "boolean" },
+										"historyId": { "type": "string" }
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

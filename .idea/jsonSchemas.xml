@@ -25,6 +25,9 @@
                   <Item>
                     <option name="path" value="mobile-videos.json" />
                   </Item>
+                  <Item>
+                    <option name="path" value="mobile-notifications.json" />
+                  </Item>
                 </list>
               </option>
             </SchemaInfo>

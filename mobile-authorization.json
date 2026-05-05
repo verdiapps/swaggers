@@ -37,6 +37,148 @@
         }
       }
     },
+    "/update-profile": {
+      "put": {
+        "tags": [
+          "User Management"
+        ],
+        "summary": "Update user profile",
+        "description": "Updates the profile information for the authenticated user",
+        "security": [
+          {
+            "cookieAuth": [],
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict or User not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/session": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "summary": "Ensure chat session",
+        "description": "Creates or retrieves an active chat session for the authenticated user",
+        "security": [
+          {
+            "cookieAuth": [],
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string", "format": "email" }
+                }
+              }
+          }
+        }
+      },
+      "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "chatSession": { "$ref": "#/components/schemas/ChatSession" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/private/permissions/seed": {
+      "post": {
+        "tags": [
+          "Private"
+        ],
+        "summary": "Seed permissions",
+        "description": "Internal endpoint to seed roles and permissions for a project",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "project": { "type": "string" },
+                  "permissions": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    }
+                  }
+                },
+                "required": ["project", "permissions"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Permissions seeded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/auth/login": {
       "post": {
         "tags": [
@@ -1296,7 +1438,7 @@
           "User Management"
         ],
         "summary": "List users with optional search and pagination",
-        "description": "Retrieves a list of users. Requires admin privileges. Supports pagination and search by first or last name.",
+        "description": "Retrieves a list of users. Requires 'get-all-users' permission. Supports pagination and search by first or last name.",
         "operationId": "listUsers",
         "parameters": [
           {
@@ -1417,6 +1559,76 @@
         "security": [
           {
             "cookieAuth": []
+          }
+        ]
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "tags": [
+          "User Management"
+        ],
+        "summary": "Get user by ID",
+        "description": "Retrieves a single user by their ID. Requires 'get-all-users' or 'get-managed-users' permission (if requester is the user's manager). Users can also fetch themselves.",
+        "operationId": "getUserById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The unique identifier of the user",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Missing or invalid authentication token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions or user deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": [],
+            "bearerAuth": []
           }
         ]
       }
@@ -2079,7 +2291,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
+                  "$ref": "#/components/schemas/UserAvatarMetadataResponse"
                 }
               }
             }
@@ -2100,7 +2312,23 @@
         ],
         "responses": {
           "200": {
-            "description": "Avatar deleted successfully"
+            "description": "Avatar deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Avatar deleted successfully"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -2225,46 +2453,6 @@
         }
       }
     },
-    "/users": {
-      "get": {
-        "tags": [
-          "User Management"
-        ],
-        "summary": "Get users",
-        "description": "Returns a list of users with optional filtering",
-        "security": [
-          {
-            "cookieAuth": [],
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful operation",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/UserResponse"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/users/me": {
       "delete": {
         "tags": [
@@ -2284,7 +2472,16 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Account deleted successfully"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ]
                 }
               }
             }
@@ -2311,8 +2508,39 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
+                  "type": "object",
+                  "properties": {
+                    "manager": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/components/schemas/UserResponse"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "manager"
+                  ]
                 }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           }
@@ -2343,6 +2571,263 @@
                     "$ref": "#/components/schemas/UserResponse"
                   }
                 }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/update-email": {
+      "post": {
+        "tags": [
+          "User Management"
+        ],
+        "summary": "Initiate email update",
+        "description": "Sends a verification code to the current email address to start the email change process",
+        "security": [
+          {
+            "cookieAuth": [],
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "newEmail": { "type": "string", "format": "email" }
+                },
+                "required": ["newEmail"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Code sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "email": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "409": {
+            "description": "Email already in use",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/update-email/verify-old": {
+      "post": {
+        "tags": [
+          "User Management"
+        ],
+        "summary": "Verify old email",
+        "description": "Verifies the code sent to the current email and sends a new code to the new email address",
+        "security": [
+          {
+            "cookieAuth": [],
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": { "type": "string" },
+                  "newEmail": { "type": "string", "format": "email" }
+                },
+                "required": ["code", "newEmail"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Code sent to new email",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "email": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error or code expired/invalid",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "User or Verification not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many attempts",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/update-email/verify-new": {
+      "post": {
+        "tags": [
+          "User Management"
+        ],
+        "summary": "Verify new email and update",
+        "description": "Verifies the code sent to the new email address and completes the email change",
+        "security": [
+          {
+            "cookieAuth": [],
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "newEmail": { "type": "string", "format": "email" },
+                  "code": { "type": "string" }
+                },
+                "required": ["newEmail", "code"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "email": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error or code expired/invalid",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Verification not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many attempts",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           }
@@ -2764,6 +3249,10 @@
           },
           "emailVerified": {
             "type": "boolean"
+          },
+          "fullName": {
+            "type": "string",
+            "nullable": true
           },
           "createdAt": {
             "type": "string",
@@ -3297,6 +3786,9 @@
             "type": "string",
             "format": "email"
           },
+          "emailVerified": {
+            "type": "boolean"
+          },
           "managerId": {
             "type": "string",
             "format": "uuid",
@@ -3328,7 +3820,15 @@
             "type": "string",
             "nullable": true
           },
+          "activityDescription": {
+            "type": "string",
+            "nullable": true
+          },
           "foodIntolerances": {
+            "type": "string",
+            "nullable": true
+          },
+          "allergiesNotes": {
             "type": "string",
             "nullable": true
           },
@@ -3354,7 +3854,7 @@
             "nullable": true
           },
           "alcoholConsumption": {
-            "type": "boolean",
+            "type": "string",
             "nullable": true
           },
           "contraindications": {
@@ -3391,6 +3891,19 @@
             "format": "date",
             "nullable": true
           },
+          "isDeleted": {
+            "type": "boolean"
+          },
+          "avatar": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserAvatarMetadataResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -3412,6 +3925,48 @@
           "createdAt",
           "updatedAt"
         ]
+      },
+      "UpdateProfileRequest": {
+        "type": "object",
+        "properties": {
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string", "nullable": true },
+          "gender": { "type": "string", "enum": ["male", "female"], "nullable": true },
+          "birthday": { "type": "string", "format": "date", "nullable": true },
+          "physicalActivity": { 
+            "type": "string", 
+            "enum": ["sedentary", "light", "moderate", "active", "athlete"],
+            "nullable": true 
+          },
+          "activityDescription": { "type": "string", "nullable": true },
+          "foodIntolerances": { "type": "string", "nullable": true },
+          "allergiesNotes": { "type": "string", "nullable": true },
+          "goalWeight": { "type": "string", "nullable": true },
+          "whereDoSports": { 
+            "type": "string", 
+            "enum": ["home", "gym", "homeandgym"],
+            "nullable": true 
+          },
+          "alcoholConsumption": { 
+            "type": "string", 
+            "enum": ["never", "rarely", "socially", "regularly"],
+            "nullable": true 
+          },
+          "isGaveBirth": { "type": "boolean", "nullable": true },
+          "gaveBirth": { "type": "string", "format": "date", "nullable": true },
+          "breastFeeding": { "type": "boolean", "nullable": true },
+          "programDay": { "type": "string", "format": "date", "nullable": true },
+          "weight": { "type": "string", "nullable": true },
+          "height": { "type": "string", "nullable": true },
+          "shoulder": { "type": "string", "nullable": true },
+          "chest": { "type": "string", "nullable": true },
+          "waist": { "type": "string", "nullable": true },
+          "hips": { "type": "string", "nullable": true },
+          "contraindications": { "type": "string", "nullable": true },
+          "eatingDisorder": { "type": "string", "nullable": true },
+          "spineIssues": { "type": "string", "nullable": true },
+          "endocrineDisorders": { "type": "string", "nullable": true }
+        }
       },
       "UsersRequest": {
         "type": "object",
@@ -3531,11 +4086,18 @@
       "ErrorResponse": {
         "type": "object",
         "properties": {
+          "name": {
+            "type": "string"
+          },
           "message": {
             "type": "string",
             "example": "Error message"
           }
-        }
+        },
+        "required": [
+          "name",
+          "message"
+        ]
       },
       "ValidationErrorResponse": {
         "type": "object",
@@ -3886,8 +4448,9 @@
               "female"
             ]
           },
-          "physicalActivity": {
-            "type": "string"
+          "physicalActivity": { 
+            "type": "string", 
+            "enum": ["sedentary", "light", "moderate", "active", "athlete"] 
           },
           "activityDescription": {
             "type": "string"
@@ -3904,11 +4467,13 @@
           "goalWeight": {
             "type": "string"
           },
-          "whereDoSports": {
-            "type": "string"
+          "whereDoSports": { 
+            "type": "string", 
+            "enum": ["home", "gym", "homeandgym"] 
           },
-          "alcoholConsumption": {
-            "type": "string"
+          "alcoholConsumption": { 
+            "type": "string", 
+            "enum": ["never", "rarely", "socially", "regularly"] 
           },
           "isGaveBirth": {
             "type": "boolean"
@@ -3950,14 +4515,31 @@
             "type": "string",
             "format": "uuid"
           },
-          "hash": {
+          "baseName": {
             "type": "string"
           },
-          "format": {
+          "fileExtension": {
+            "type": "string",
+            "nullable": true
+          },
+          "mimeType": {
             "type": "string"
           },
-          "size": {
-            "type": "number"
+          "originalFileExtension": {
+            "type": "string",
+            "nullable": true
+          },
+          "originalMimeType": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "thumbHash": {
+            "type": "string"
           },
           "createdAt": {
             "type": "string",
@@ -3967,30 +4549,93 @@
             "type": "string",
             "format": "date-time"
           }
-        }
+        },
+        "required": [
+          "id",
+          "userId",
+          "baseName",
+          "mimeType",
+          "originalMimeType",
+          "width",
+          "height",
+          "thumbHash",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "SessionResponse": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "deviceName": { "type": "string" },
-          "deviceType": { "type": "string", "enum": ["mobile", "desktop"] },
-          "appName": { "type": "string" },
-          "appVersion": { "type": "string" },
-          "location": { "type": "string" },
-          "ip": { "type": "string" },
-          "lastActive": { "type": "string", "format": "date-time" },
-          "isCurrent": { "type": "boolean" },
-          "systemVersion": { "type": "string" }
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "deviceName": {
+            "type": "string"
+          },
+          "deviceType": {
+            "type": "string",
+            "enum": [
+              "mobile",
+              "desktop"
+            ]
+          },
+          "appName": {
+            "type": "string"
+          },
+          "appVersion": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "ip": {
+            "type": "string"
+          },
+          "lastActive": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isCurrent": {
+            "type": "boolean"
+          },
+          "systemVersion": {
+            "type": "string"
+          }
         },
-        "required": ["id", "deviceName", "deviceType", "lastActive", "isCurrent"]
+        "required": [
+          "id",
+          "deviceName",
+          "deviceType",
+          "lastActive",
+          "isCurrent"
+        ]
       },
       "SuccessResponse": {
         "type": "object",
         "properties": {
-          "success": { "type": "boolean", "example": true }
+          "success": {
+            "type": "boolean",
+            "example": true
+          }
         },
-        "required": ["success"]
+        "required": [
+          "success"
+        ]
+      },
+      "ChatSession": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "userId": { "type": "string", "format": "uuid" },
+          "sourceId": { "type": "string" },
+          "conversationId": { "type": "integer", "nullable": true },
+          "pubsubToken": { "type": "string", "nullable": true },
+          "managerId": { "type": "string", "format": "uuid", "nullable": true },
+          "chatwootContactId": { "type": "string", "nullable": true },
+          "chatwootConversationId": { "type": "string", "nullable": true }
+        },
+        "required": ["id", "userId", "sourceId"]
       }
     },
     "securitySchemes": {
